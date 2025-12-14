@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Open Forms
+Exec=open_forms
+Icon=in.aryank.openforms
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=GTK;
+StartupNotify=true
+DBusActivatable=true

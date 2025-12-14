@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="FormConfig" parent="GtkBox">
+    <property name="orientation">1</property>
+    <property name="halign">center</property>
+    <property name="valign">center</property>
+    <child>
+      <object class="GtkLabel" id="config_label">
+        <property name="label" translatable="yes">Select Form Config</property>
+        <style>
+          <class name="title-4"/>
+        </style>
+      </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="open_form_config_btn">
+        <property name="margin-top">10</property>
+        <property name="child">
+          <object class="AdwButtonContent">
+            <property name="icon-name">document-open-symbolic</property>
+            <property name="label" translatable="yes">_Open</property>
+            <property name="use-underline">True</property>
+          </object>
+        </property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="csv_label">
+        <property name="margin-top">20</property>
+        <property name="label" translatable="yes">Select Form CSV</property>
+        <style>
+          <class name="title-4"/>
+        </style>
+      </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="open_csv_btn">
+        <property name="margin-top">10</property>
+        <property name="child">
+          <object class="AdwButtonContent">
+            <property name="icon-name">document-open-symbolic</property>
+            <property name="label" translatable="yes">_Open</property>
+            <property name="use-underline">True</property>
+          </object>
+        </property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="create_form_btn">
+        <property name="margin-top">30</property>
+        <property name="label">Create Form</property>
+        <property name="sensitive">0</property>
+        <style>
+          <class name="suggested-action"/>
+        </style>
+      </object>
+    </child>
+  </template>
+</interface>

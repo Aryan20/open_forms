@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/in/aryank/openforms">
+    <file preprocess="xml-stripblanks">window.ui</file>
+    <file preprocess="xml-stripblanks">form_page.ui</file>
+    <file preprocess="xml-stripblanks">form_config.ui</file>
+    <file preprocess="xml-stripblanks">shortcuts-dialog.ui</file>
+  </gresource>
+</gresources>

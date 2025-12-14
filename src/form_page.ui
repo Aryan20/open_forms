@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="FormPage" parent="GtkBox">
+    <property name="orientation">1</property>
+      <child>
+        <object class="AdwToastOverlay" id="form_toast_overlay">
+          <child>
+            <object class="GtkBox">
+              <property name="orientation">vertical</property>
+              <child>
+                <object class="GtkScrolledWindow">
+                  <property name="vexpand">True</property>
+                  <child>
+                    <object class="AdwClamp">
+                      <property name="maximum-size">500</property>
+                      <child>
+                        <object class="GtkBox" id="form_container">
+                          <property name="orientation">vertical</property>
+                          <property name="spacing">12</property>
+                          <property name="margin-top">24</property>
+                          <property name="margin-bottom">24</property>
+                          <property name="margin-start">24</property>
+                          <property name="margin-end">24</property>
+                        </object>
+                      </child>
+                    </object>
+                  </child>
+                </object>
+              </child>
+              <child>
+                <object class="GtkButton" id="submit_button">
+                  <property name="label">Submit</property>
+                  <property name="css-classes">suggested-action</property>
+                  <signal name="clicked" handler="on_submit_clicked"/>
+                  <property name="halign">center</property>
+                  <property name="margin-top">10</property>
+                  <property name="margin-bottom">10</property>
+                  <property name="width-request">104</property>
+                </object>
+              </child>
+            </object>
+          </child>
+        </object>
+    </child>
+  </template>
+</interface>
