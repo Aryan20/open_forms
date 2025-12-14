@@ -56,8 +56,6 @@ class FormConfig(Gtk.Box):
         file_filter.add_suffix(suffix)
 
         filter_store.append(file_filter)
-
-
         dialog.set_filters(filter_store)
         dialog.open(None, None, callback)
 
@@ -75,7 +73,7 @@ class FormConfig(Gtk.Box):
 
             self.page.config_file = file
             self.page.form_config = self._load_config(file)
-
+            self.open_form_config_btn.set_label(file.get_basename())
             self._try_form_open()
         except GLib.Error:
             pass  # cancelled
@@ -90,7 +88,7 @@ class FormConfig(Gtk.Box):
     def _on_csv_selected(self, dialog, result):
         try:
             file = dialog.open_finish(result)
-
+            self.open_csv_btn.set_label(file.get_basename())
             self.page.csv_file = file
             self._try_form_open()
         except GLib.Error:

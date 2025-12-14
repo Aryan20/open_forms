@@ -1,7 +1,7 @@
 {
     "id" : "in.aryank.openforms",
     "runtime" : "org.gnome.Platform",
-    "runtime-version" : "49",
+    "runtime-version" : "48",
     "sdk" : "org.gnome.Sdk",
     "command" : "open_forms",
     "finish-args" : [
@@ -30,7 +30,8 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "url" : "https://github.com/Aryan20/open_forms.git"
+                    "url" : "https://github.com/Aryan20/open_forms.git",
+                    "branch" : "176967a5aa2a07a81fb93ce07d683c12faa2eb90"
                 }
             ],
             "config-opts" : [
