@@ -4,22 +4,22 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
 
-  <name>Open_forms</name>
-  <summary>Keep the summary shorter, between 10 and 35 characters</summary>
+  <name>Open Forms</name>
+  <summary>Open Source Local First Form App</summary>
   <description>
     <p>No description</p>
   </description>
 
   <developer id="tld.vendor">
-    <name>Developer name</name>
+    <name>Aryan Kaushik</name>
   </developer>
 
   <!-- Required: Should be a link to the upstream homepage for the component -->
-  <url type="homepage">https://example.org/</url>
+  <url type="homepage">https://github.com/Aryan20/open_forms</url>
   <!-- Recommended: It is highly recommended for open-source projects to display the source code repository -->
-  <url type="vcs-browser">https://example.org/repository</url>
+  <url type="vcs-browser">https://github.com/Aryan20/open_forms</url>
   <!-- Should point to the software's bug tracking system, for users to report new bugs -->
-  <url type="bugtracker">https://example.org/issues</url>
+  <url type="bugtracker">https://github.com/Aryan20/open_forms/issues</url>
   <!-- Should link a FAQ page for this software, to answer some of the most-asked questions in detail -->
   <!-- URLs of this type should point to a webpage where users can submit or modify translations of the upstream project -->
   <url type="translate">https://example.org/translate</url>
@@ -29,7 +29,7 @@
   <!-- URLs of this type should point to a webpage showing information on how to donate to the described software project -->
   <url type="donation">https://example.org/donate</url>
   <!-- This could for example be an HTTPS URL to an online form or a page describing how to contact the developer -->
-  <url type="contact">https://example.org/contact</url>
+  <url type="contact">https://aryank.in/contact/</url>
   <!-- URLs of this type should point to a webpage showing information on how to contribute to the described software project -->
   <url type="contribute">https://example.org/contribute</url>
 
