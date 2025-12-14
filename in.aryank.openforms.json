@@ -30,7 +30,7 @@
                 {
                     "type" : "git",
                     "url" : "https://github.com/Aryan20/open_forms.git",
-                    "branch" : "a121c7e3b24094dd42ff6fc57c503ad54da2a1f0"
+                    "branch" : "main"
                 }
             ],
             "config-opts" : [

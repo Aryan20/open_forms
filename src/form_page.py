@@ -69,7 +69,14 @@ class FormPage(Gtk.Box):
             label=label_text,
             halign=Gtk.Align.START,
         )
-        if field_type != "check":
+
+        if field_type == "label":
+            if "style" in field:
+                style_list = field.get("style")
+                for style in style_list:
+                    label.add_css_class(style)
+
+        if field_type != "check" and field_type != "picture":
             row.append(label)
 
         if field_type == "entry":
@@ -103,8 +110,27 @@ class FormPage(Gtk.Box):
             row.append(widget)
         elif field_type == "label":
             return row, None
+        elif field_type == "picture":
+            widget = Gtk.Picture.new_for_resource(field.get("uri"))
+            widget.set_halign(3)
+            widget.set_valign(3)
+            widget.set_hexpand(True)
+            widget.set_vexpand(True)
+            widget.can_shrink = True
+            width = field.get("width")
+            height = field.get("height")
+            widget.set_size_request(width, height)
+            widget.set_content_fit(Gtk.ContentFit.CONTAIN)
+            widget.set_margin_top(10)
+            widget.set_margin_bottom(10)
+            row.append(widget)
         else:
             return None, None
+
+        if "style" in field:
+            style_list = field.get("style")
+            for style in style_list:
+                label.add_css_class(style)
 
         return row, widget
 
