@@ -5,6 +5,7 @@
     "sdk" : "org.gnome.Sdk",
     "command" : "open_forms",
     "finish-args" : [
+    	"--filesystem=xdg-pictures:ro",
         "--share=ipc",
         "--socket=fallback-x11",
         "--device=dri",

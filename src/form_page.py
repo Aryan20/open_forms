@@ -55,7 +55,10 @@ class FormPage(Gtk.Box):
             label = field["label"]
             row, widget = self._create_field(label, field)
             if widget:
-                self.fields[label] = widget
+                self.fields[field.get("id")] = {
+                    "widget": widget,
+                    "config": field
+                }
                 self.form_container.append(row)
             elif row:
                 self.form_container.append(row)
@@ -111,11 +114,11 @@ class FormPage(Gtk.Box):
         elif field_type == "label":
             return row, None
         elif field_type == "picture":
-            widget = Gtk.Picture.new_for_resource(field.get("uri"))
+            file = Gio.File.new_for_uri(field.get("uri"))
+            widget = Gtk.Picture()
+            widget.set_file(file)
             widget.set_halign(3)
             widget.set_valign(3)
-            widget.set_hexpand(True)
-            widget.set_vexpand(True)
             widget.can_shrink = True
             width = field.get("width")
             height = field.get("height")
@@ -124,6 +127,7 @@ class FormPage(Gtk.Box):
             widget.set_margin_top(10)
             widget.set_margin_bottom(10)
             row.append(widget)
+            return row, None
         else:
             return None, None
 
@@ -147,25 +151,26 @@ class FormPage(Gtk.Box):
     def _collect_data(self) -> dict:
         data = {}
 
-        for label, widget in self.fields.items():
+        for field_id, field_dict in self.fields.items():
+            widget = field_dict["widget"]
             if isinstance(widget, Gtk.Entry):
-                data[label] = widget.get_text()
+                data[field_id] = widget.get_text()
             elif isinstance(widget, Gtk.TextView):
                 text_buffer = widget.get_buffer()
                 start_iter = text_buffer.get_start_iter()
                 end_iter = text_buffer.get_end_iter()
-                data[label] = text_buffer.get_text(start_iter, end_iter, True)
+                data[field_id] = text_buffer.get_text(start_iter, end_iter, True)
             elif isinstance(widget, list):
                 for indv_widget in widget:
                     active = indv_widget.get_active()
                     if active:
-                        data[label] = indv_widget.get_label()
+                        data[field_id] = indv_widget.get_label()
             elif isinstance(widget, Gtk.CheckButton):
                 active = widget.get_active()
-                data[label] = True if active else False
+                data[field_id] = True if active else False
 
             elif isinstance(widget, Gtk.SpinButton):
-                data[label] = widget.get_value_as_int()
+                data[field_id] = widget.get_value_as_int()
 
         return data
 
@@ -187,7 +192,8 @@ class FormPage(Gtk.Box):
             writer.writerow(data)
 
     def _reset_form(self):
-        for widget in self.fields.values():
+        for fields_dict in self.fields.values():
+            widget = fields_dict["widget"]
             if isinstance(widget, Gtk.Entry):
                 widget.set_text("")
             elif isinstance(widget, Gtk.TextView):
