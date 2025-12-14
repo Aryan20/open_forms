@@ -1,5 +1,10 @@
 # OpenForms
 
+
+<img width="100" height="100" alt="in aryank openforms" src="https://github.com/user-attachments/assets/f99829cc-cb74-4883-ab3c-e8ad13e741e3" />
+
+
+
 **OpenForms** is a simple, local-first form collection app for GNOME.  
 It is designed for situations where setting up online forms is impractical or unreliable — such as conferences, meetups, workshops, or community events.
 
@@ -20,6 +25,12 @@ At many conferences and events, collecting information through online forms ofte
 In such scenarios, a small, no-fuss, offline-friendly form collection tool makes far more sense.
 
 After searching for existing solutions and not finding anything that fit this use case well, OpenForms was built to fill that gap.
+
+## Screenshots
+<img height="400" alt="Screenshot From 2025-12-14 20-22-20" src="https://github.com/user-attachments/assets/ef136732-46cf-4eb4-ba0f-6dc06062d6df" /> <img height="400" alt="Screenshot From 2025-12-14 20-22-24" src="https://github.com/user-attachments/assets/0aee53f6-e31f-488f-9ccf-195c6da38319" /> <img height="400" alt="Screenshot From 2025-12-14 20-22-37" src="https://github.com/user-attachments/assets/b2ea9a92-6275-4a7a-bbf5-ca2449f6cdc2" /> <img height="400" alt="Screenshot From 2025-12-14 20-25-13" src="https://github.com/user-attachments/assets/96f8b18e-1dfa-4238-bab5-53f11f61dcb6" />
+
+
+
 
 ---
 
