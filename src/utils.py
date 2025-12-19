@@ -1,4 +1,4 @@
-# page.py
+# utils.py
 #
 # Copyright 2025 Aryan Kaushik
 #
@@ -17,24 +17,20 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from gi.repository import Gtk
-from .form_config import FormConfig
+
+from gi.repository import Adw
 
 
-class NewPage(Gtk.Box):
-    def __init__(self, **kwargs):
-        super().__init__()
-        self.set_orientation(Gtk.Orientation.VERTICAL)
-        self.set_hexpand(True)
-        self.set_vexpand(True)
-        form_config = FormConfig()
-        form_config.set_page(self)
-        self.append(form_config)
+def show_fatal_toast(toast_overlay) -> None:
+    """Show a fatal error toast when app state is invalid."""
+    toast = Adw.Toast(
+        title=(
+            "Something went wrong.\n"
+            "Please reopen the form or restart the application."
+        ),
+        timeout=6,
+    )
 
-        self.config_file = None
-        self.csv_file = None
-        self.form_config = None
-        self.tab_page = None
+    toast.set_priority(Adw.ToastPriority.HIGH)
 
-    def set_tab_page(self, tab_page):
-        self.tab_page = tab_page
+    toast_overlay.add_toast(toast)

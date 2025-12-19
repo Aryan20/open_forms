@@ -17,24 +17,25 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from gi.repository import Adw, Gtk, Gio, GLib
+from gi.repository import Adw, Gtk
 from .page import NewPage
-import json
 
-@Gtk.Template(resource_path='/in/aryank/openforms/window.ui')
+
+@Gtk.Template(resource_path="/in/aryank/openforms/window.ui")
 class OpenFormsWindow(Adw.ApplicationWindow):
-    __gtype_name__ = 'OpenFormsWindow'
+    __gtype_name__ = "OpenFormsWindow"
 
-    overview = Gtk.Template.Child()
-    overview_open_button = Gtk.Template.Child()
-    new_tab_button = Gtk.Template.Child()
-    tab_view = Gtk.Template.Child()
-
+    overview: Adw.TabOverview = Gtk.Template.Child()
+    overview_open_button: Gtk.Button = Gtk.Template.Child()
+    new_tab_button: Gtk.Button = Gtk.Template.Child()
+    tab_view: Adw.TabView = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.overview_open_button.connect("clicked", lambda _: self.overview.set_open(True))
+        self.overview_open_button.connect(
+            "clicked", lambda _: self.overview.set_open(True)
+        )
         self.new_tab_button.connect("clicked", lambda _: self.add_page())
         self.overview.connect("create-tab", lambda _: self.add_page())
         self.tab_view.connect("create-window", lambda _: self.create_new_window())
@@ -44,7 +45,7 @@ class OpenFormsWindow(Adw.ApplicationWindow):
     def add_page(self):
         page_box = NewPage()
         page = self.tab_view.append(page_box)
-        page.set_title('New Form')
+        page.set_title("New Form")
         page_box.set_tab_page(page)
         return page
 

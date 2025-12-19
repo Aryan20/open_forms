@@ -34,15 +34,33 @@
       </object>
     </child>
     <child>
-      <object class="GtkButton" id="open_csv_btn">
-        <property name="margin-top">10</property>
-        <property name="child">
-          <object class="AdwButtonContent">
-            <property name="icon-name">document-open-symbolic</property>
-            <property name="label" translatable="yes">_Open</property>
-            <property name="use-underline">True</property>
+      <object class="GtkBox">
+        <property name="orientation">0</property>
+        <property name="spacing">5</property>
+        <child>
+          <object class="GtkButton" id="open_csv_btn">
+            <property name="margin-top">10</property>
+            <property name="child">
+              <object class="AdwButtonContent">
+                <property name="icon-name">document-open-symbolic</property>
+                <property name="label" translatable="yes">_Open</property>
+                <property name="use-underline">True</property>
+              </object>
+            </property>
           </object>
-        </property>
+        </child>
+        <child>
+          <object class="GtkButton" id="new_csv_btn">
+            <property name="margin-top">10</property>
+            <property name="child">
+              <object class="AdwButtonContent">
+                <property name="icon-name">document-new-symbolic</property>
+                <property name="label" translatable="yes">_New</property>
+                <property name="use-underline">True</property>
+              </object>
+            </property>
+          </object>
+        </child>
       </object>
     </child>
     <child>

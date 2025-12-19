@@ -17,25 +17,35 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from gi.repository import Adw, Gtk, Gio, GLib
-import json
 import csv
 import os
 
+from gi.repository import Adw, Gtk, Gio
+
+from .utils import show_fatal_toast
+
+
 @Gtk.Template(resource_path="/in/aryank/openforms/form_page.ui")
 class FormPage(Gtk.Box):
+    """
+    This is the final Form page that appears.
+    It is an instance of a GtkBox which will host all the fields.
+    This class is responsible for displaying the form and saving
+    the result.
+    """
+
     __gtype_name__ = "FormPage"
 
-    form_container = Gtk.Template.Child()
-    submit_button = Gtk.Template.Child()
-    form_toast_overlay = Gtk.Template.Child()
+    form_container: Gtk.Box = Gtk.Template.Child()
+    submit_button: Gtk.Button = Gtk.Template.Child()
+    form_toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.set_hexpand(True)
         self.set_vexpand(True)
 
-        self.fields = {}  # label -> widget
+        self.fields = {}
 
     def set_page(self, page):
         self.page = page
@@ -45,8 +55,10 @@ class FormPage(Gtk.Box):
     def _build_form(self):
         form_name = self.config.get("form_name", None)
         if form_name:
+            if not self.page:
+                show_fatal_toast(self.form_toast_overlay)
             self.page.tab_page.set_title(form_name)
-        fields_list = self.config.get('fields', None)
+        fields_list = self.config.get("fields", None)
         if not fields_list:
             return
         for field in fields_list:
@@ -55,10 +67,7 @@ class FormPage(Gtk.Box):
             label = field["label"]
             row, widget = self._create_field(label, field)
             if widget:
-                self.fields[field.get("id")] = {
-                    "widget": widget,
-                    "config": field
-                }
+                self.fields[field.get("id")] = {"widget": widget, "config": field}
                 self.form_container.append(row)
             elif row:
                 self.form_container.append(row)
@@ -74,12 +83,11 @@ class FormPage(Gtk.Box):
         )
 
         if field_type == "label":
-            if "style" in field:
-                style_list = field.get("style")
-                for style in style_list:
-                    label.add_css_class(style)
+            style_list = field.get("style", [])
+            for style in style_list:
+                label.add_css_class(style)
 
-        if field_type != "check" and field_type != "picture":
+        if field_type not in ("check", "picture"):
             row.append(label)
 
         if field_type == "entry":
@@ -104,37 +112,58 @@ class FormPage(Gtk.Box):
                 widget.append(radio_widget)
         elif field_type == "text":
             widget = Gtk.TextView()
-            widget.add_css_class('card')
+            widget.add_css_class("card")
             widget.set_left_margin(6)
             widget.set_top_margin(6)
             widget.set_bottom_margin(6)
             widget.set_right_margin(6)
-            widget.remove_css_class('view')
+            widget.remove_css_class("view")
             row.append(widget)
         elif field_type == "label":
             return row, None
         elif field_type == "picture":
-            file = Gio.File.new_for_uri(field.get("uri"))
-            widget = Gtk.Picture()
-            widget.set_file(file)
-            widget.set_halign(3)
-            widget.set_valign(3)
-            widget.can_shrink = True
-            width = field.get("width")
-            height = field.get("height")
-            widget.set_size_request(width, height)
-            widget.set_content_fit(Gtk.ContentFit.CONTAIN)
-            widget.set_margin_top(10)
-            widget.set_margin_bottom(10)
+            try:
+                file = Gio.File.new_for_uri(field.get("uri", None))
+                widget = Gtk.Picture()
+                widget.set_file(file)
+                widget.set_halign(3)
+                widget.set_valign(3)
+                widget.can_shrink = True
+                width = field.get("width", 20)
+                height = field.get("height", 20)
+                widget.set_size_request(width, height)
+                widget.set_content_fit(Gtk.ContentFit.CONTAIN)
+                widget.set_margin_top(10)
+                widget.set_margin_bottom(10)
+                row.append(widget)
+                return row, None
+            except Exception as _e:
+                toast = Adw.Toast(
+                    f"Error in opening picture at {field.get('uri', None)}"
+                )
+                toast.set_timeout(4)
+                self.form_toast_overlay.add_toast(toast)
+                return None, None
+
+        elif field_type == "calendar":
+            widget = Gtk.Calendar()
+            widget.remove_css_class("view")
+            widget.add_css_class("card")
             row.append(widget)
-            return row, None
+        elif field_type == "spin":
+            if "min" in field and "max" in field and "step" in field:
+                widget = Gtk.SpinButton.new_with_range(
+                    field["min"], field["max"], field["step"]
+                )
+            else:
+                widget = Gtk.SpinButton()
+            row.append(widget)
         else:
             return None, None
 
-        if "style" in field:
-            style_list = field.get("style")
-            for style in style_list:
-                label.add_css_class(style)
+        style_list = field.get("style", [])
+        for style in style_list:
+            label.add_css_class(style)
 
         return row, widget
 
@@ -168,6 +197,9 @@ class FormPage(Gtk.Box):
             elif isinstance(widget, Gtk.CheckButton):
                 active = widget.get_active()
                 data[field_id] = True if active else False
+            elif isinstance(widget, Gtk.Calendar):
+                date = widget.get_date().format_iso8601()
+                data[field_id] = date
 
             elif isinstance(widget, Gtk.SpinButton):
                 data[field_id] = widget.get_value_as_int()
@@ -175,21 +207,29 @@ class FormPage(Gtk.Box):
         return data
 
     def _append_to_csv(self, data: dict):
+        if self.page is None:
+            show_fatal_toast(self.form_toast_overlay)
+
         file = self.page.csv_file
 
         if not file:
-            return
+            show_fatal_toast(self.form_toast_overlay)
 
         path = file.get_path()
+        if path is None:
+            show_fatal_toast(self.form_toast_overlay)
         file_exists = os.path.exists(path)
 
-        with open(path, "a", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=data.keys())
+        try:
+            with open(path, "a", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=data.keys())
 
-            if not file_exists or os.stat(path).st_size == 0:
-                writer.writeheader()
+                if not file_exists or os.stat(path).st_size == 0:
+                    writer.writeheader()
 
-            writer.writerow(data)
+                writer.writerow(data)
+        except Exception as _e:
+            show_fatal_toast(self.form_toast_overlay)
 
     def _reset_form(self):
         for fields_dict in self.fields.values():

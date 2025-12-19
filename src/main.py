@@ -19,26 +19,31 @@
 
 import sys
 import gi
+import gettext
 
-gi.require_version('Gtk', '4.0')
-gi.require_version('Adw', '1')
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Gio, Adw
-from .window import OpenFormsWindow
+from gi.repository import Gio, Adw  # noqa: E402
+from .window import OpenFormsWindow  # noqa: E402
+
+_ = gettext.gettext
 
 
 class OpenFormsApplication(Adw.Application):
     """The main application singleton class."""
 
     def __init__(self):
-        super().__init__(application_id='in.aryank.openforms',
-                         flags=Gio.ApplicationFlags.DEFAULT_FLAGS,
-                         resource_base_path='/in/aryank/openforms')
+        super().__init__(
+            application_id="in.aryank.openforms",
+            flags=Gio.ApplicationFlags.DEFAULT_FLAGS,
+            resource_base_path="/in/aryank/openforms",
+        )
         self.config_file = None
         self.csv_file = None
         self.form_config = None
-        self.create_action('quit', lambda *_: self.quit(), ['<control>q'])
-        self.create_action('about', self.on_about_action)
+        self.create_action("quit", lambda *_: self.quit(), ["<control>q"])
+        self.create_action("about", self.on_about_action)
 
     def do_activate(self):
         """Called when the application is activated.
@@ -53,13 +58,15 @@ class OpenFormsApplication(Adw.Application):
 
     def on_about_action(self, *args):
         """Callback for the app.about action."""
-        about = Adw.AboutDialog(application_name='Open Forms',
-                                application_icon='in.aryank.openforms',
-                                developer_name='Aryan Kaushik',
-                                version='0.1.0',
-                                developers=['Aryan Kaushik'],
-                                copyright='© 2025 Aryan Kaushik')
-        about.set_translator_credits(_('translator-credits'))
+        about = Adw.AboutDialog(
+            application_name="Open Forms",
+            application_icon="in.aryank.openforms",
+            developer_name="Aryan Kaushik",
+            version="0.1.0",
+            developers=["Aryan Kaushik"],
+            copyright="© 2025 Aryan Kaushik",
+        )
+        about.set_translator_credits(_("translator-credits"))
         about.present(self.props.active_window)
 
     def create_action(self, name, callback, shortcuts=None):
@@ -78,7 +85,7 @@ class OpenFormsApplication(Adw.Application):
             self.set_accels_for_action(f"app.{name}", shortcuts)
 
 
-def main(version):
+def main(_version):
     """The application's entry point."""
     app = OpenFormsApplication()
     return app.run(sys.argv)

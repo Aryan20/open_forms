@@ -32,7 +32,8 @@ open_forms_sources = [
   'window.py',
   'form_page.py',
   'form_config.py',
-  'page.py'
+  'page.py',
+  'utils.py'
 ]
 
 install_data(open_forms_sources, install_dir: moduledir)
