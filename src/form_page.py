@@ -65,9 +65,13 @@ class FormPage(Gtk.Box):
             assert "type" in field
             assert "label" in field
             label = field["label"]
-            row, widget = self._create_field(label, field)
+            row, widget, label_widget = self._create_field(label, field)
             if widget:
-                self.fields[field.get("id")] = {"widget": widget, "config": field}
+                self.fields[field.get("id")] = {
+                    "widget": widget,
+                    "label_widget": label_widget,
+                    "config": field,
+                }
                 self.form_container.append(row)
             elif row:
                 self.form_container.append(row)
@@ -102,7 +106,7 @@ class FormPage(Gtk.Box):
         elif field_type == "radio":
             options = field.get("options")
             if not options:
-                return None, None
+                return None, None, label
             widget = []
             first_radio = None
             for option in options:
@@ -123,7 +127,7 @@ class FormPage(Gtk.Box):
             widget.remove_css_class("view")
             row.append(widget)
         elif field_type == "label":
-            return row, None
+            return row, None, label
         elif field_type == "picture":
             try:
                 file = Gio.File.new_for_uri(field.get("uri", None))
@@ -139,14 +143,14 @@ class FormPage(Gtk.Box):
                 widget.set_margin_top(10)
                 widget.set_margin_bottom(10)
                 row.append(widget)
-                return row, None
+                return row, None, label
             except Exception as _e:
                 toast = Adw.Toast(
                     f"Error in opening picture at {field.get('uri', None)}"
                 )
                 toast.set_timeout(4)
                 self.form_toast_overlay.add_toast(toast)
-                return None, None
+                return None, None, label
 
         elif field_type == "calendar":
             widget = Gtk.Calendar()
@@ -162,13 +166,13 @@ class FormPage(Gtk.Box):
                 widget = Gtk.SpinButton()
             row.append(widget)
         else:
-            return None, None
+            return None, None, label
 
         style_list = field.get("style", [])
         for style in style_list:
             label.add_css_class(style)
 
-        return row, widget
+        return row, widget, label
 
     @Gtk.Template.Callback()
     def on_submit_clicked(self, *_):
@@ -187,48 +191,68 @@ class FormPage(Gtk.Box):
 
         for field_id, field_dict in self.fields.items():
             widget = field_dict["widget"]
-            field_value = None
-            if isinstance(widget, Gtk.Entry):
-                field_value = widget.get_text()
-            elif isinstance(widget, Gtk.TextView):
-                text_buffer = widget.get_buffer()
-                start_iter = text_buffer.get_start_iter()
-                end_iter = text_buffer.get_end_iter()
-                field_value = text_buffer.get_text(start_iter, end_iter, True)
-            elif isinstance(widget, list):
-                for indv_widget in widget:
-                    active = indv_widget.get_active()
-                    if active:
-                        field_value = indv_widget.get_label()
-            elif isinstance(widget, Gtk.CheckButton):
-                active = widget.get_active()
-                field_value = True if active else False
-            elif isinstance(widget, Gtk.Calendar):
-                date = widget.get_date().format_iso8601()
-                field_value = date
-            elif isinstance(widget, Gtk.SpinButton):
-                field_value = widget.get_value_as_int()
-            field_dict_config = field_dict.get("config", None)
-            if not field_dict_config:
+            field_value = self.get_value_from_field(widget)
+            if field_dict.get("config", None) is None:
                 show_fatal_toast(self.form_toast_overlay)
-            if field_dict_config.get("required", False):
-                show_toast = False
-                if field_value is None:
-                    show_toast = True
-                if isinstance(field_value, str) and field_value == "":
-                    show_toast = True
-                if isinstance(field_value, bool) and not field_value:
-                    show_toast = True
-                if show_toast:
-                    toast = Adw.Toast.new(
-                        f"Please fill the required field: {field_dict_config.get('label', 'All')}"
-                    )
-                    toast.set_timeout(2)
-                    self.form_toast_overlay.add_toast(toast)
-                    return None
+                return None
+            validate_result = self.validate_field_value(widget, field_dict, field_value)
+            if validate_result is None or not validate_result:
+                return None
             data[field_id] = field_value
 
         return data
+
+    def get_value_from_field(self, widget):
+        field_value = None
+        if isinstance(widget, Gtk.Entry):
+            field_value = widget.get_text()
+        elif isinstance(widget, Gtk.TextView):
+            text_buffer = widget.get_buffer()
+            start_iter = text_buffer.get_start_iter()
+            end_iter = text_buffer.get_end_iter()
+            field_value = text_buffer.get_text(start_iter, end_iter, True)
+        elif isinstance(widget, list):
+            for indv_widget in widget:
+                active = indv_widget.get_active()
+                if active:
+                    field_value = indv_widget.get_label()
+        elif isinstance(widget, Gtk.CheckButton):
+            active = widget.get_active()
+            field_value = True if active else False
+        elif isinstance(widget, Gtk.Calendar):
+            date = widget.get_date().format_iso8601()
+            field_value = date
+        elif isinstance(widget, Gtk.SpinButton):
+            field_value = widget.get_value_as_int()
+
+        return field_value
+
+    def validate_field_value(self, widget, field_dict, field_value):
+        field_dict_config = field_dict.get("config", None)
+        if field_dict_config.get("required", False):
+            show_toast = False
+            if field_value is None:
+                show_toast = True
+            if isinstance(field_value, str) and field_value == "":
+                show_toast = True
+            if isinstance(field_value, bool) and not field_value:
+                show_toast = True
+            if show_toast:
+                toast = Adw.Toast.new(
+                    f"Please fill the required field: {field_dict_config.get('label', 'All')}"
+                )
+                toast.set_timeout(2)
+                self.form_toast_overlay.add_toast(toast)
+                if field_dict_config.get("type", None) == "check":
+                    widget.add_css_class("error")
+                else:
+                    field_dict["label_widget"].add_css_class("error")
+                return False
+        if field_dict_config.get("type", None) == "check":
+            widget.remove_css_class("error")
+        else:
+            field_dict["label_widget"].remove_css_class("error")
+        return True
 
     def _append_to_csv(self, data: dict):
         if self.page is None:
