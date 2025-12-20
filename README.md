@@ -113,12 +113,13 @@ Please use the latest release or build using GNOME Builder.
       "id": "name",
       "type": "entry",
       "label": "Your name",
+      "required": true
     },
 
     {
       "id": "email",
       "type": "entry",
-      "label": "Email address",
+      "label": "Email address"
     },
 
     {
@@ -130,19 +131,30 @@ Please use the latest release or build using GNOME Builder.
         "Education",
         "Work / Research",
         "Just exploring"
-      ],
+      ]
     },
-
     {
       "id": "i_agree_to_submit",
       "type": "check",
       "label": "I agree to submit"
     },
-
     {
       "id": "comments",
       "type": "text",
       "label": "Additional comments or suggestions"
+    },
+    {
+      "id": "first_start",
+      "type": "calendar",
+      "label": "When did you first started using OpenForms?"
+    },
+    {
+      "id": "rating",
+      "type": "spin",
+      "label": "What rating would you give OpenForms?",
+      "min": 0,
+      "max": 5,
+      "step": 1
     }
   ]
 }
