@@ -29,6 +29,12 @@ VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
 localedir = '@localedir@'
 
+_snap = os.environ.get("SNAP")
+
+if _snap:
+    pkgdatadir = os.path.join(_snap, '@pkgdatadir@'.lstrip('/'))
+    localedir = os.path.join(_snap, '@localedir@'.lstrip('/'))
+
 sys.path.insert(1, pkgdatadir)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 locale.bindtextdomain('open_forms', localedir)

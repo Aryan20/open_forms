@@ -36,7 +36,7 @@ class OpenFormsApplication(Adw.Application):
     def __init__(self):
         super().__init__(
             application_id="in.aryank.openforms",
-            flags=Gio.ApplicationFlags.DEFAULT_FLAGS,
+            flags=Gio.ApplicationFlags.NON_UNIQUE,
             resource_base_path="/in/aryank/openforms",
         )
         self.config_file = None
