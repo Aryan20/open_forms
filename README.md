@@ -76,9 +76,12 @@ The app only requests **pictures access**, which is used exclusively for attachi
 
 ## Installation
 
-### Flatpak (recommended)
+### Flatpak
 
 Please use the latest release or build using GNOME Builder.
+
+### Snap
+[![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/open-forms)
 
 ## Sample Config
 
