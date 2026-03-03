@@ -1,0 +1,50 @@
+name: open-forms
+base: core24
+version: "0.2.0"
+summary: Open Forms
+description: |
+  Open Forms is a simple, local-first form collection app for GNOME. It is designed for situations where setting up online forms is impractical or unreliable - such as conferences, meetups, workshops, or community events. 
+icon: usr/share/icons/hicolor/128x128/apps/in.aryank.openforms.png
+title: Open Forms
+contact: mailto:aryan-kaushik@ubuntu.com
+license: GPL-3.0-or-later
+website: https://github.com/aryan20/open_forms
+source-code: https://github.com/aryan20/open_forms
+issues: https://github.com/aryan20/open_forms/issues
+donation: https://github.com/sponsors/aryan20
+
+grade: stable
+confinement: strict
+
+apps:
+  open-forms:
+    command: usr/bin/open_forms
+    desktop: usr/share/applications/in.aryank.openforms.desktop
+    common-id: in.aryank.openforms
+    extensions:
+        - gnome
+    plugs:
+        - home
+        - desktop
+        - wayland
+        - x11
+        - gsettings
+
+parts:
+  open-forms:
+    plugin: meson
+    source: .
+    meson-parameters:
+      - --prefix=/usr
+    build-packages:
+      - meson
+      - ninja-build
+      - pkg-config
+      - gettext
+      - python3
+      - desktop-file-utils
+      - appstream
+    stage-packages:
+      - python3
+      - python3-gi
+
