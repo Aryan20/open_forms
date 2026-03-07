@@ -42,10 +42,11 @@ After searching for existing solutions and not finding anything that fit this us
 - Attach images using the system file picker
 - Clean integration with **GNOME**
 - Sandboxed distribution via **Flatpak**
-
-### Planned
 - Create form configurations directly from the GUI (no manual JSON editing)
 - Support for making fields required
+- Snap packaging support
+
+### Planned
 - Strong form validation
 - Form history to quickly open them again
 

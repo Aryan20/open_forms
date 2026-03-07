@@ -62,7 +62,7 @@ class OpenFormsApplication(Adw.Application):
             application_name="Open Forms",
             application_icon="in.aryank.openforms",
             developer_name="Aryan Kaushik",
-            version="0.2.0",
+            version="0.4.0",
             developers=["Aryan Kaushik"],
             copyright="© 2025 Aryan Kaushik",
         )

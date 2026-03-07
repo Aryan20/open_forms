@@ -1,6 +1,6 @@
 name: open-forms
 base: core24
-version: "0.2.0"
+version: "0.4.0"
 summary: Open Forms
 description: |
   Open Forms is a simple, local-first form collection app for GNOME. It is designed for situations where setting up online forms is impractical or unreliable - such as conferences, meetups, workshops, or community events. 
