@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="Adw" version="1.0"/>
+  <template class="BuilderPage" parent="GtkBox">
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="AdwToastOverlay" id="builder_toast_overlay">
+        <property name="vexpand">True</property>
+        <property name="hexpand">True</property>
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <!-- Scrollable content area -->
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="vexpand">True</property>
+                <property name="hexpand">True</property>
+                <child>
+                  <object class="AdwClamp">
+                    <property name="maximum-size">600</property>
+                    <property name="tightening-threshold">400</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">18</property>
+                        <property name="margin-top">24</property>
+                        <property name="margin-bottom">24</property>
+                        <property name="margin-start">18</property>
+                        <property name="margin-end">18</property>
+                        <child>
+                          <object class="AdwPreferencesGroup">
+                            <property name="title">Form</property>
+                            <child>
+                              <object class="AdwEntryRow" id="form_name_row">
+                                <property name="title">Form Name</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <!-- Fields list — populated programmatically -->
+                        <child>
+                          <object class="AdwPreferencesGroup" id="fields_group">
+                            <property name="title">Fields</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkButton">
+                            <property name="halign">fill</property>
+                            <property name="css-classes">pill suggested-action</property>
+                            <signal name="clicked" handler="on_add_field_clicked"/>
+                            <property name="child">
+                              <object class="AdwButtonContent">
+                                <property name="icon-name">list-add-symbolic</property>
+                                <property name="label" translatable="yes">Add Field</property>
+                              </object>
+                            </property>
+                          </object>
+                        </child>
+
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <property name="margin-top">6</property>
+                <property name="margin-bottom">12</property>
+                <property name="margin-start">18</property>
+                <property name="margin-end">18</property>
+                <child>
+                  <object class="GtkSeparator">
+                    <property name="margin-bottom">10</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label" translatable="yes">Save Form</property>
+                    <property name="halign">center</property>
+                    <property name="css-classes">pill</property>
+                    <signal name="clicked" handler="on_save_clicked"/>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

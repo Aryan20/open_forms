@@ -1,0 +1,164 @@
+# builder_page.py
+#
+# Copyright 2025 Aryan Kaushik
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import os
+
+from gi.repository import Adw, Gtk, Gio
+
+from .form_model import FormField, FormModel
+from .field_editor_row import FieldEditorRow
+from .field_type_dialog import FieldTypeDialog
+
+
+@Gtk.Template(resource_path="/in/aryank/openforms/builder_page.ui")
+class BuilderPage(Gtk.Box):
+    """
+    The GUI Form Builder page.
+    Users can create or edit a form visually; the result is serialised
+    to JSON (same schema as hand-written configs) when they hit Save.
+
+    The page is opened as a new tab from FormConfig, just like FormPage.
+    After saving, the produced JSON path is passed back so the tab title
+    updates and the file can be immediately used.
+    """
+
+    __gtype_name__ = "BuilderPage"
+
+    # Template children (defined in builder_page.ui)
+    builder_toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
+    form_name_row: Adw.EntryRow = Gtk.Template.Child()
+    fields_group: Adw.PreferencesGroup = Gtk.Template.Child()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.set_hexpand(True)
+        self.set_vexpand(True)
+
+        self.model = FormModel()
+        self._rows: list[FieldEditorRow] = []
+
+        # Wire the form-name entry (declared in UI template)
+        self.form_name_row.connect("changed", self._on_form_name_changed)
+
+    def set_page(self, page):
+        """Called by FormConfig after the tab is created, same pattern as FormPage."""
+        self.page = page
+
+    def load_from_model(self, model: FormModel):
+        """Populate the builder from an existing FormModel (for editing a saved form)."""
+        self.model = model
+        self.form_name_row.set_text(model.form_name)
+        for ff in model.fields:
+            self._append_row(ff)
+
+    @Gtk.Template.Callback()
+    def on_add_field_clicked(self, *_):
+        dialog = FieldTypeDialog(self._add_field_of_type)
+        dialog.present(self.get_root())
+
+    @Gtk.Template.Callback()
+    def on_save_clicked(self, *_):
+        file_dialog = Gtk.FileDialog()
+        file_dialog.set_title("Save Form Config")
+        safe_name = (self.model.form_name or "form").lower().replace(" ", "_")
+        file_dialog.set_initial_name(safe_name + ".json")
+
+        json_filter = Gtk.FileFilter()
+        json_filter.set_name("JSON files")
+        json_filter.add_mime_type("application/json")
+        json_filter.add_pattern("*.json")
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+        filters.append(json_filter)
+        file_dialog.set_filters(filters)
+
+        file_dialog.save(self.get_root(), None, self._on_save_finish)
+
+    def _on_form_name_changed(self, row):
+        self.model.form_name = row.get_text()
+        # Keep the tab title in sync if we have a page reference
+        if hasattr(self, "page") and self.page and hasattr(self.page, "tab_page"):
+            title = row.get_text() or "New Form"
+            self.page.tab_page.set_title(f"✏ {title}")
+
+    def _add_field_of_type(self, ftype: str):
+        ff = FormField(type=ftype, label="")
+        self.model.fields.append(ff)
+        self._append_row(ff, expanded=True)
+
+    def _append_row(self, ff: FormField, expanded: bool = False):
+        row = FieldEditorRow(
+            ff,
+            on_delete=self._delete_row,
+            on_move_up=self._move_up,
+            on_move_down=self._move_down,
+        )
+        self._rows.append(row)
+        self.fields_group.add(row)
+        if expanded:
+            row.set_expanded(True)
+
+    def _delete_row(self, row: FieldEditorRow):
+        self.model.fields.remove(row.form_field)
+        self._rows.remove(row)
+        self.fields_group.remove(row)
+
+    def _move_up(self, row: FieldEditorRow):
+        idx = self._rows.index(row)
+        if idx > 0:
+            self._swap(idx, idx - 1)
+
+    def _move_down(self, row: FieldEditorRow):
+        idx = self._rows.index(row)
+        if idx < len(self._rows) - 1:
+            self._swap(idx, idx + 1)
+
+    def _swap(self, i: int, j: int):
+        # Swap in model
+        self.model.fields[i], self.model.fields[j] = (
+            self.model.fields[j],
+            self.model.fields[i],
+        )
+        # Swap in row list, then rebuild visual order
+        self._rows[i], self._rows[j] = self._rows[j], self._rows[i]
+        for r in self._rows:
+            self.fields_group.remove(r)
+        for r in self._rows:
+            self.fields_group.add(r)
+
+    def _on_save_finish(self, dialog, result):
+        try:
+            file = dialog.save_finish(result)
+        except Exception:
+            # User cancelled
+            return
+
+        path = file.get_path()
+        if not path:
+            self._show_toast("Could not determine save path")
+            return
+
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(self.model.to_json())
+        except OSError as e:
+            self._show_toast(f"Save failed: {e}")
+            return
+
+        self._show_toast(f"Saved to {path}")
+
+        # Update tab title to reflect saved file name
+        if hasattr(self, "page") and self.page and hasattr(self.page, "tab_page"):
+            self.page.tab_page.set_title(os.path.basename(path))
+
+    def _show_toast(self, message: str, timeout: int = 3):
+        toast = Adw.Toast.new(message)
+        toast.set_timeout(timeout)
+        self.builder_toast_overlay.add_toast(toast)

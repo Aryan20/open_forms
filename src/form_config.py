@@ -21,13 +21,14 @@ import json
 from gi.repository import Gtk, Gio, GLib
 
 from .form_page import FormPage
+from .builder_page import BuilderPage
 
 
 @Gtk.Template(resource_path="/in/aryank/openforms/form_config.ui")
 class FormConfig(Gtk.Box):
     """
     FormConfig is a GtkBox that hosts the buttons used to select
-    the form config and cs file alongside the button to generate
+    the form config and csv file alongside the button to generate
     the final form. It is the first screen the user sees.
     """
 
@@ -37,6 +38,7 @@ class FormConfig(Gtk.Box):
     open_csv_btn: Gtk.Button = Gtk.Template.Child()
     create_form_btn: Gtk.Button = Gtk.Template.Child()
     new_csv_btn: Gtk.Button = Gtk.Template.Child()
+    build_form_btn: Gtk.Button = Gtk.Template.Child()  # NEW
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -49,6 +51,7 @@ class FormConfig(Gtk.Box):
         self.open_form_config_btn.connect("clicked", self._open_json_config)
         self.open_csv_btn.connect("clicked", self._open_csv)
         self.new_csv_btn.connect("clicked", self._create_new_csv)
+        self.build_form_btn.connect("clicked", self._open_builder)
 
     def set_page(self, page):
         """
@@ -146,3 +149,12 @@ class FormConfig(Gtk.Box):
         form_page = FormPage()
         form_page.set_page(self.page)
         self.page.append(form_page)
+
+    def _open_builder(self, *_):
+        self.page.tab_page.set_title("✏ New Form")
+
+        self.page.remove(self)
+
+        builder = BuilderPage()
+        builder.set_page(self.page)
+        self.page.append(builder)

@@ -5,5 +5,6 @@
     <file preprocess="xml-stripblanks">form_page.ui</file>
     <file preprocess="xml-stripblanks">form_config.ui</file>
     <file preprocess="xml-stripblanks">shortcuts-dialog.ui</file>
+    <file preprocess="xml-stripblanks">builder_page.ui</file>
   </gresource>
 </gresources>

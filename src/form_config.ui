@@ -13,15 +13,33 @@
       </object>
     </child>
     <child>
-      <object class="GtkButton" id="open_form_config_btn">
+      <object class="GtkBox">
+        <property name="orientation">1</property>
+        <property name="spacing">5</property>
         <property name="margin-top">10</property>
-        <property name="child">
-          <object class="AdwButtonContent">
-            <property name="icon-name">document-open-symbolic</property>
-            <property name="label" translatable="yes">_Open</property>
-            <property name="use-underline">True</property>
-          </object>
-        </property>
+          <child>
+            <object class="GtkButton" id="build_form_btn">
+
+              <property name="child">
+                <object class="AdwButtonContent">
+                  <property name="icon-name">document-edit-symbolic</property>
+                  <property name="label" translatable="yes">_Create New</property>
+                  <property name="use-underline">True</property>
+                </object>
+              </property>
+            </object>
+          </child>
+          <child>
+            <object class="GtkButton" id="open_form_config_btn">
+              <property name="child">
+                <object class="AdwButtonContent">
+                  <property name="icon-name">document-open-symbolic</property>
+                  <property name="label" translatable="yes">_Open Existing</property>
+                  <property name="use-underline">True</property>
+                </object>
+              </property>
+            </object>
+          </child>
       </object>
     </child>
     <child>
@@ -35,27 +53,26 @@
     </child>
     <child>
       <object class="GtkBox">
-        <property name="orientation">0</property>
+        <property name="orientation">1</property>
         <property name="spacing">5</property>
+        <property name="margin-top">10</property>
         <child>
-          <object class="GtkButton" id="open_csv_btn">
-            <property name="margin-top">10</property>
+          <object class="GtkButton" id="new_csv_btn">
             <property name="child">
               <object class="AdwButtonContent">
-                <property name="icon-name">document-open-symbolic</property>
-                <property name="label" translatable="yes">_Open</property>
+                <property name="icon-name">document-new-symbolic</property>
+                <property name="label" translatable="yes">_Create New</property>
                 <property name="use-underline">True</property>
               </object>
             </property>
           </object>
         </child>
         <child>
-          <object class="GtkButton" id="new_csv_btn">
-            <property name="margin-top">10</property>
+          <object class="GtkButton" id="open_csv_btn">
             <property name="child">
               <object class="AdwButtonContent">
-                <property name="icon-name">document-new-symbolic</property>
-                <property name="label" translatable="yes">_New</property>
+                <property name="icon-name">document-open-symbolic</property>
+                <property name="label" translatable="yes">_Open Existing</property>
                 <property name="use-underline">True</property>
               </object>
             </property>
@@ -66,7 +83,7 @@
     <child>
       <object class="GtkButton" id="create_form_btn">
         <property name="margin-top">30</property>
-        <property name="label">Create Form</property>
+        <property name="label" translatable="yes">Open Form</property>
         <property name="sensitive">0</property>
         <style>
           <class name="suggested-action"/>

@@ -33,7 +33,11 @@ open_forms_sources = [
   'form_page.py',
   'form_config.py',
   'page.py',
-  'utils.py'
+  'utils.py',
+  'builder_page.py',
+  'field_editor_row.py',
+  'field_type_dialog.py',
+  'form_model.py',
 ]
 
 install_data(open_forms_sources, install_dir: moduledir)
