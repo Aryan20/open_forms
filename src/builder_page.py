@@ -36,6 +36,7 @@ class BuilderPage(Gtk.Box):
     builder_toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
     form_name_row: Adw.EntryRow = Gtk.Template.Child()
     fields_group: Adw.PreferencesGroup = Gtk.Template.Child()
+    back_button: Gtk.Button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -59,6 +60,13 @@ class BuilderPage(Gtk.Box):
         for ff in model.fields:
             self._append_row(ff)
 
+    def set_save_path(self, path: str):
+        """
+        Pre-seed the save path so the file dialog opens at the original
+        file's location and the user can overwrite with one click.
+        """
+        self._save_path = path
+
     @Gtk.Template.Callback()
     def on_add_field_clicked(self, *_):
         dialog = FieldTypeDialog(self._add_field_of_type)
@@ -68,8 +76,6 @@ class BuilderPage(Gtk.Box):
     def on_save_clicked(self, *_):
         file_dialog = Gtk.FileDialog()
         file_dialog.set_title("Save Form Config")
-        safe_name = (self.model.form_name or "form").lower().replace(" ", "_")
-        file_dialog.set_initial_name(safe_name + ".json")
 
         json_filter = Gtk.FileFilter()
         json_filter.set_name("JSON files")
@@ -78,6 +84,15 @@ class BuilderPage(Gtk.Box):
         filters = Gio.ListStore.new(Gtk.FileFilter)
         filters.append(json_filter)
         file_dialog.set_filters(filters)
+
+        if self._save_path:
+            # Editing an existing file: open the dialog in the same folder
+            # with the same filename pre-filled so one click overwrites it.
+            existing = Gio.File.new_for_path(self._save_path)
+            file_dialog.set_initial_file(existing)
+        else:
+            safe_name = (self.model.form_name or "form").lower().replace(" ", "_")
+            file_dialog.set_initial_name(safe_name + ".json")
 
         file_dialog.save(self.get_root(), None, self._on_save_finish)
 
@@ -157,6 +172,32 @@ class BuilderPage(Gtk.Box):
         # Update tab title to reflect saved file name
         if hasattr(self, "page") and self.page and hasattr(self.page, "tab_page"):
             self.page.tab_page.set_title(os.path.basename(path))
+
+        # Unlock Back now that there is a saved file to return with
+        self.back_button.set_sensitive(True)
+
+    @Gtk.Template.Callback()
+    def on_back_clicked(self, *_):
+        """
+        Return to FormConfig with the saved JSON pre-selected.
+        The user just needs to pick a CSV and hit Open Form.
+        Only reachable after at least one successful Save.
+        """
+        if not self._save_path:
+            return
+
+        from .form_config import FormConfig
+
+        self.page.remove(self)
+
+        form_config = FormConfig()
+        form_config.set_page(self.page)
+        self.page.append(form_config)
+
+        saved_file = Gio.File.new_for_path(self._save_path)
+        form_config.preselect_config(saved_file)
+
+        self.page.tab_page.set_title(os.path.basename(self._save_path))
 
     def _show_toast(self, message: str, timeout: int = 3):
         toast = Adw.Toast.new(message)

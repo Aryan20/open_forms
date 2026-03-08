@@ -38,7 +38,8 @@ class FormConfig(Gtk.Box):
     open_csv_btn: Gtk.Button = Gtk.Template.Child()
     create_form_btn: Gtk.Button = Gtk.Template.Child()
     new_csv_btn: Gtk.Button = Gtk.Template.Child()
-    build_form_btn: Gtk.Button = Gtk.Template.Child()  # NEW
+    build_form_btn: Gtk.Button = Gtk.Template.Child()
+    edit_in_builder_btn: Gtk.Button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -52,6 +53,7 @@ class FormConfig(Gtk.Box):
         self.open_csv_btn.connect("clicked", self._open_csv)
         self.new_csv_btn.connect("clicked", self._create_new_csv)
         self.build_form_btn.connect("clicked", self._open_builder)
+        self.edit_in_builder_btn.connect("clicked", self._edit_in_builder)
 
     def set_page(self, page):
         """
@@ -108,6 +110,7 @@ class FormConfig(Gtk.Box):
             self.page.config_file = file
             self.page.form_config = self._load_config(file)
             self.open_form_config_btn.set_label(file.get_basename())
+            self.edit_in_builder_btn.set_sensitive(True)
             self._try_form_open()
         except GLib.Error:
             pass  # cancelled
@@ -150,11 +153,61 @@ class FormConfig(Gtk.Box):
         form_page.set_page(self.page)
         self.page.append(form_page)
 
+    def preselect_config(self, file: Gio.File):
+        """
+        Called by BuilderPage after saving to pre-fill the JSON config
+        field, so the user only needs to pick a CSV and click Open Form.
+        Mirrors what _on_json_selected does but without the file dialog.
+        """
+        self.page.config_file = file
+        self.page.form_config = self._load_config(file)
+        self.open_form_config_btn.set_label(file.get_basename())
+        self.edit_in_builder_btn.set_sensitive(True)
+        self._try_form_open()
+
     def _open_builder(self, *_):
-        self.page.tab_page.set_title("✏ New Form")
+        self.page.tab_page.set_title("New Form")
 
         self.page.remove(self)
 
         builder = BuilderPage()
         builder.set_page(self.page)
+        self.page.append(builder)
+
+    def _edit_in_builder(self, *_):
+        """
+        Open the already-selected JSON config in the builder for editing.
+        Parses it into a FormModel, populates the BuilderPage, then swaps
+        in the builder exactly like _open_builder does.
+        On save the user can overwrite the original file or choose a new path.
+        """
+        from .form_model import FormModel
+
+        config_file = self.page.config_file
+        if not config_file:
+            return
+
+        path = config_file.get_path()
+        if not path:
+            return
+
+        try:
+            model = FormModel.from_file(path)
+        except Exception as e:
+            # Malformed JSON — surface the error via the existing toast pattern
+            # by falling back gracefully; the file was already validated by
+            # _load_config so this should only happen on disk race conditions.
+            print(f"Could not parse config for editing: {e}")
+            return
+
+        self.page.tab_page.set_title(f"✏ {model.form_name or config_file.get_basename()}")
+
+        self.page.remove(self)
+
+        builder = BuilderPage()
+        builder.set_page(self.page)
+        builder.load_from_model(model)
+        # Pre-set the save dialog's suggested path to the original file
+        # so the user can hit Save and overwrite in one click.
+        builder.set_save_path(path)
         self.page.append(builder)

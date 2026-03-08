@@ -30,14 +30,37 @@
             </object>
           </child>
           <child>
-            <object class="GtkButton" id="open_form_config_btn">
-              <property name="child">
-                <object class="AdwButtonContent">
-                  <property name="icon-name">document-open-symbolic</property>
-                  <property name="label" translatable="yes">_Open Existing</property>
-                  <property name="use-underline">True</property>
+            <object class="GtkBox">
+              <property name="orientation">0</property>
+              <property name="spacing">8</property>
+              <property name="halign">center</property>
+              <property name="margin-top">10</property>
+              <child>
+                <!-- Open JSON -->
+                <object class="GtkButton" id="open_form_config_btn">
+                  <property name="child">
+                    <object class="AdwButtonContent">
+                      <property name="icon-name">document-open-symbolic</property>
+                      <property name="label" translatable="yes">_Open</property>
+                      <property name="use-underline">True</property>
+                    </object>
+                  </property>
                 </object>
-              </property>
+              </child>
+              <child>
+                <!-- Edit in Builder — sensitive only after a config is selected -->
+                <object class="GtkButton" id="edit_in_builder_btn">
+                  <property name="sensitive">0</property>
+                  <property name="tooltip-text" translatable="yes">Edit this config in the visual builder</property>
+                  <property name="child">
+                    <object class="AdwButtonContent">
+                      <property name="icon-name">document-edit-symbolic</property>
+                      <property name="label" translatable="yes">_Edit</property>
+                      <property name="use-underline">True</property>
+                    </object>
+                  </property>
+                </object>
+              </child>
             </object>
           </child>
       </object>
@@ -92,3 +115,4 @@
     </child>
   </template>
 </interface>
+

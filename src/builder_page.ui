@@ -57,7 +57,6 @@
                             </property>
                           </object>
                         </child>
-
                       </object>
                     </child>
                   </object>
@@ -77,11 +76,44 @@
                   </object>
                 </child>
                 <child>
-                  <object class="GtkButton">
-                    <property name="label" translatable="yes">Save Form</property>
-                    <property name="halign">center</property>
-                    <property name="css-classes">pill</property>
-                    <signal name="clicked" handler="on_save_clicked"/>
+                  <object class="AdwClamp">
+                    <property name="maximum-size">600</property>
+                    <property name="tightening-threshold">400</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">8</property>
+                        <property name="homogeneous">True</property>
+                        <child>
+                          <!-- Back: navigates to FormConfig, pre-seeding the saved JSON -->
+                          <object class="GtkButton" id="back_button">
+                            <property name="halign">fill</property>
+                            <property name="sensitive">0</property>
+                            <property name="tooltip-text" translatable="yes">Go back to the forms page with this config selected</property>
+                            <signal name="clicked" handler="on_back_clicked"/>
+                            <property name="child">
+                              <object class="AdwButtonContent">
+                                <property name="icon-name">go-previous-symbolic</property>
+                                <property name="label" translatable="yes">Back</property>
+                              </object>
+                            </property>
+                          </object>
+                        </child>
+                        <child>
+                          <!-- Save: writes JSON, enables Back -->
+                          <object class="GtkButton">
+                            <property name="halign">fill</property>
+                            <signal name="clicked" handler="on_save_clicked"/>
+                            <property name="child">
+                              <object class="AdwButtonContent">
+                                <property name="icon-name">document-save-symbolic</property>
+                                <property name="label" translatable="yes">Save</property>
+                              </object>
+                            </property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -92,3 +124,4 @@
     </child>
   </template>
 </interface>
+
