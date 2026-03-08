@@ -45,6 +45,8 @@ class BuilderPage(Gtk.Box):
 
         self.model = FormModel()
         self._rows: list[FieldEditorRow] = []
+        # If set, Save will suggest this path (used when editing an existing file)
+        self._save_path: str | None = None
 
         # Wire the form-name entry (declared in UI template)
         self.form_name_row.connect("changed", self._on_form_name_changed)
@@ -173,8 +175,7 @@ class BuilderPage(Gtk.Box):
         if hasattr(self, "page") and self.page and hasattr(self.page, "tab_page"):
             self.page.tab_page.set_title(os.path.basename(path))
 
-        # Unlock Back now that there is a saved file to return with
-        self.back_button.set_sensitive(True)
+        self._save_path = path
 
     @Gtk.Template.Callback()
     def on_back_clicked(self, *_):
@@ -183,9 +184,6 @@ class BuilderPage(Gtk.Box):
         The user just needs to pick a CSV and hit Open Form.
         Only reachable after at least one successful Save.
         """
-        if not self._save_path:
-            return
-
         from .form_config import FormConfig
 
         self.page.remove(self)
@@ -194,10 +192,11 @@ class BuilderPage(Gtk.Box):
         form_config.set_page(self.page)
         self.page.append(form_config)
 
-        saved_file = Gio.File.new_for_path(self._save_path)
-        form_config.preselect_config(saved_file)
+        if self._save_path:
+            saved_file = Gio.File.new_for_path(self._save_path)
+            form_config.preselect_config(saved_file)
 
-        self.page.tab_page.set_title(os.path.basename(self._save_path))
+            self.page.tab_page.set_title(os.path.basename(self._save_path))
 
     def _show_toast(self, message: str, timeout: int = 3):
         toast = Adw.Toast.new(message)

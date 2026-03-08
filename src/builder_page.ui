@@ -88,7 +88,6 @@
                           <!-- Back: navigates to FormConfig, pre-seeding the saved JSON -->
                           <object class="GtkButton" id="back_button">
                             <property name="halign">fill</property>
-                            <property name="sensitive">0</property>
                             <property name="tooltip-text" translatable="yes">Go back to the forms page with this config selected</property>
                             <signal name="clicked" handler="on_back_clicked"/>
                             <property name="child">
