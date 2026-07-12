@@ -37,6 +37,10 @@ class BuilderPage(Gtk.Box):
     form_name_row: Adw.EntryRow = Gtk.Template.Child()
     fields_group: Adw.PreferencesGroup = Gtk.Template.Child()
     back_button: Gtk.Button = Gtk.Template.Child()
+    kiosk_group: Adw.PreferencesGroup = Gtk.Template.Child()
+    preview_scroll: Gtk.ScrolledWindow = Gtk.Template.Child()
+    preview_separator: Gtk.Separator = Gtk.Template.Child()
+    preview_toggle: Gtk.ToggleButton = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -47,9 +51,11 @@ class BuilderPage(Gtk.Box):
         self._rows: list[FieldEditorRow] = []
         # If set, Save will suggest this path (used when editing an existing file)
         self._save_path: str | None = None
+        self._preview_enabled = False
 
         # Wire the form-name entry (declared in UI template)
         self.form_name_row.connect("changed", self._on_form_name_changed)
+        self._build_kiosk_section()
 
     def set_page(self, page):
         """Called by FormConfig after the tab is created, same pattern as FormPage."""
@@ -59,6 +65,7 @@ class BuilderPage(Gtk.Box):
         """Populate the builder from an existing FormModel (for editing a saved form)."""
         self.model = model
         self.form_name_row.set_text(model.form_name)
+        self._load_kiosk_from_dict(model.kiosk)
         for ff in model.fields:
             self._append_row(ff)
 
@@ -68,6 +75,50 @@ class BuilderPage(Gtk.Box):
         file's location and the user can overwrite with one click.
         """
         self._save_path = path
+
+    def _build_kiosk_section(self):
+        self._kiosk_reset_row = Adw.SpinRow.new_with_range(1, 60, 1)
+        self._kiosk_reset_row.set_title("Auto-reset after (seconds)")
+        self._kiosk_reset_row.set_subtitle("Form clears this many seconds after submission")
+        self._kiosk_reset_row.set_value(5)
+        self._kiosk_reset_row.connect("notify::value", self._sync_kiosk)
+        self.kiosk_group.add(self._kiosk_reset_row)
+
+        self._kiosk_idle_row = Adw.SpinRow.new_with_range(0, 600, 10)
+        self._kiosk_idle_row.set_title("Idle timeout (seconds)")
+        self._kiosk_idle_row.set_subtitle("Form resets after this long with no interaction; 0 = disabled")
+        self._kiosk_idle_row.set_value(60)
+        self._kiosk_idle_row.connect("notify::value", self._sync_kiosk)
+        self.kiosk_group.add(self._kiosk_idle_row)
+
+        self._kiosk_msg_row = Adw.EntryRow(title="Thank-you message")
+        self._kiosk_msg_row.set_text("Thank you!")
+        self._kiosk_msg_row.connect("changed", self._sync_kiosk)
+        self.kiosk_group.add(self._kiosk_msg_row)
+
+        self._kiosk_enabled_row = Adw.SwitchRow(title="Include kiosk settings in saved JSON")
+        self._kiosk_enabled_row.set_subtitle("Off = standard form JSON; On = kiosk config embedded")
+        self._kiosk_enabled_row.connect("notify::active", self._sync_kiosk)
+        self.kiosk_group.add(self._kiosk_enabled_row)
+
+    def _sync_kiosk(self, *_):
+        if self._kiosk_enabled_row.get_active():
+            self.model.kiosk = {
+                "auto_reset_seconds": int(self._kiosk_reset_row.get_value()),
+                "idle_timeout_seconds": int(self._kiosk_idle_row.get_value()),
+                "thank_you_message": self._kiosk_msg_row.get_text(),
+            }
+        else:
+            self.model.kiosk = {}
+        self._on_model_changed()
+
+    def _load_kiosk_from_dict(self, kiosk: dict):
+        if not kiosk:
+            return
+        self._kiosk_enabled_row.set_active(True)
+        self._kiosk_reset_row.set_value(float(kiosk.get("auto_reset_seconds", 5)))
+        self._kiosk_idle_row.set_value(float(kiosk.get("idle_timeout_seconds", 60)))
+        self._kiosk_msg_row.set_text(kiosk.get("thank_you_message", "Thank you!"))
 
     @Gtk.Template.Callback()
     def on_add_field_clicked(self, *_):
@@ -104,11 +155,13 @@ class BuilderPage(Gtk.Box):
         if hasattr(self, "page") and self.page and hasattr(self.page, "tab_page"):
             title = row.get_text() or "New Form"
             self.page.tab_page.set_title(f"✏ {title}")
+        self._on_model_changed()
 
     def _add_field_of_type(self, ftype: str):
         ff = FormField(type=ftype, label="")
         self.model.fields.append(ff)
         self._append_row(ff, expanded=True)
+        self._on_model_changed()
 
     def _append_row(self, ff: FormField, expanded: bool = False):
         row = FieldEditorRow(
@@ -116,6 +169,7 @@ class BuilderPage(Gtk.Box):
             on_delete=self._delete_row,
             on_move_up=self._move_up,
             on_move_down=self._move_down,
+            on_changed=self._on_model_changed,
         )
         self._rows.append(row)
         self.fields_group.add(row)
@@ -126,6 +180,7 @@ class BuilderPage(Gtk.Box):
         self.model.fields.remove(row.form_field)
         self._rows.remove(row)
         self.fields_group.remove(row)
+        self._on_model_changed()
 
     def _move_up(self, row: FieldEditorRow):
         idx = self._rows.index(row)
@@ -149,6 +204,25 @@ class BuilderPage(Gtk.Box):
             self.fields_group.remove(r)
         for r in self._rows:
             self.fields_group.add(r)
+        self._on_model_changed()
+
+    @Gtk.Template.Callback()
+    def on_preview_toggled(self, btn: Gtk.ToggleButton):
+        self._preview_enabled = btn.get_active()
+        self.preview_scroll.set_visible(self._preview_enabled)
+        self.preview_separator.set_visible(self._preview_enabled)
+        if self._preview_enabled:
+            self._refresh_preview()
+
+    def _on_model_changed(self):
+        if self._preview_enabled:
+            self._refresh_preview()
+
+    def _refresh_preview(self):
+        from .form_page import FormPage
+        fp = FormPage(preview=True)
+        fp.load_preview(self.model)
+        self.preview_scroll.set_child(fp)
 
     def _on_save_finish(self, dialog, result):
         try:

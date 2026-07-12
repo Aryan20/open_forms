@@ -39,24 +39,67 @@ class FormPage(Gtk.Box):
     form_container: Gtk.Box = Gtk.Template.Child()
     submit_button: Gtk.Button = Gtk.Template.Child()
     form_toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
+    kiosk_toggle: Gtk.ToggleButton = Gtk.Template.Child()
+    page_stack: Gtk.Stack = Gtk.Template.Child()
+    thankyou_box: Gtk.Box = Gtk.Template.Child()
 
-    def __init__(self, **kwargs):
+    def __init__(self, preview: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.set_hexpand(True)
         self.set_vexpand(True)
 
         self.fields = {}
+        self.page = None
+        self._preview = preview
+        self._kiosk_manager = None
+
+        if preview:
+            self.submit_button.set_label("Preview")
+            self.submit_button.set_sensitive(False)
+            self.kiosk_toggle.set_visible(False)
+        else:
+            self._kiosk_btn_content = Adw.ButtonContent(
+                icon_name="view-fullscreen-symbolic",
+                label="Kiosk",
+            )
+            self.kiosk_toggle.set_child(self._kiosk_btn_content)
+            self._kiosk_handler_id = self.kiosk_toggle.connect(
+                "toggled", self._on_kiosk_toggled
+            )
 
     def set_page(self, page):
         self.page = page
         self.config = page.form_config
         self._build_form()
 
+        kiosk_cfg = self.config.get("kiosk", {})
+        if kiosk_cfg:
+            from .kiosk_manager import KioskManager
+            self._kiosk_manager = KioskManager(self, kiosk_cfg)
+            self._kiosk_manager.activate()
+            # Sync toggle appearance — auto-activate bypasses _on_kiosk_toggled
+            self.kiosk_toggle.handler_block(self._kiosk_handler_id)
+            self.kiosk_toggle.set_active(True)
+            self.kiosk_toggle.handler_unblock(self._kiosk_handler_id)
+            self._update_kiosk_toggle(True)
+
+    def load_preview(self, model):
+        """Populate the form from a FormModel without a page or CSV file."""
+        while (child := self.form_container.get_first_child()):
+            self.form_container.remove(child)
+        self.fields.clear()
+
+        try:
+            import json
+            self.config = json.loads(model.to_json())
+        except Exception:
+            self.config = {}
+
+        self._build_form()
+
     def _build_form(self):
         form_name = self.config.get("form_name", None)
-        if form_name:
-            if not self.page:
-                show_fatal_toast(self.form_toast_overlay)
+        if form_name and self.page:
             self.page.tab_page.set_title(form_name)
         fields_list = self.config.get("fields", None)
         if not fields_list:
@@ -97,11 +140,26 @@ class FormPage(Gtk.Box):
         if field_type not in ("check", "picture"):
             row.append(label)
 
+        help_text = field.get("help_text", "")
+        if help_text and field_type not in ("label", "picture"):
+            help_label = Gtk.Label(label=help_text, halign=Gtk.Align.START, wrap=True)
+            help_label.add_css_class("dim-label")
+            help_label.add_css_class("caption")
+            row.append(help_label)
+
         if field_type == "entry":
             widget = Gtk.Entry()
+            placeholder = field.get("placeholder", "")
+            if placeholder:
+                widget.set_placeholder_text(placeholder)
             row.append(widget)
         elif field_type == "check":
             widget = Gtk.CheckButton.new_with_label(label_text)
+            row.append(widget)
+        elif field_type == "dropdown":
+            options = field.get("options", [])
+            string_list = Gtk.StringList.new(options)
+            widget = Gtk.DropDown.new(string_list, None)
             row.append(widget)
         elif field_type == "radio":
             options = field.get("options")
@@ -176,15 +234,21 @@ class FormPage(Gtk.Box):
 
     @Gtk.Template.Callback()
     def on_submit_clicked(self, *_):
+        if self._preview:
+            return
+
         data = self._collect_data()
         if not data:
             return
         self._append_to_csv(data)
         self._reset_form()
 
-        toast = Adw.Toast.new("Form data collected")
-        toast.set_timeout(1)
-        self.form_toast_overlay.add_toast(toast)
+        if self._kiosk_manager:
+            self._kiosk_manager.show_thankyou()
+        else:
+            toast = Adw.Toast.new("Form data collected")
+            toast.set_timeout(1)
+            self.form_toast_overlay.add_toast(toast)
 
     def _collect_data(self) -> dict:
         data = {}
@@ -224,6 +288,12 @@ class FormPage(Gtk.Box):
             field_value = date
         elif isinstance(widget, Gtk.SpinButton):
             field_value = widget.get_value_as_int()
+        elif isinstance(widget, Gtk.DropDown):
+            idx = widget.get_selected()
+            if idx != Gtk.INVALID_LIST_POSITION:
+                model = widget.get_model()
+                if model:
+                    field_value = model.get_string(idx)
 
         return field_value
 
@@ -257,15 +327,18 @@ class FormPage(Gtk.Box):
     def _append_to_csv(self, data: dict):
         if self.page is None:
             show_fatal_toast(self.form_toast_overlay)
+            return
 
         file = self.page.csv_file
 
         if not file:
             show_fatal_toast(self.form_toast_overlay)
+            return
 
         path = file.get_path()
         if path is None:
             show_fatal_toast(self.form_toast_overlay)
+            return
         file_exists = os.path.exists(path)
 
         try:
@@ -296,3 +369,32 @@ class FormPage(Gtk.Box):
                 widget.set_value(0)
             elif isinstance(widget, Gtk.CheckButton):
                 widget.set_active(False)
+            elif isinstance(widget, Gtk.DropDown):
+                widget.set_selected(0)
+
+    def _update_kiosk_toggle(self, active: bool):
+        if active:
+            self._kiosk_btn_content.set_icon_name("view-restore-symbolic")
+            self._kiosk_btn_content.set_label("Exit Kiosk")
+        else:
+            self._kiosk_btn_content.set_icon_name("view-fullscreen-symbolic")
+            self._kiosk_btn_content.set_label("Kiosk")
+
+    def _on_kiosk_toggled(self, btn: Gtk.ToggleButton):
+        if btn.get_active():
+            from .kiosk_manager import KioskManager
+            kiosk_cfg = self.config.get("kiosk", {
+                "auto_reset_seconds": 5,
+                "idle_timeout_seconds": 60,
+                "thank_you_message": "Thank you!",
+            })
+            while (child := self.thankyou_box.get_first_child()):
+                self.thankyou_box.remove(child)
+            self._kiosk_manager = KioskManager(self, kiosk_cfg)
+            self._kiosk_manager.activate()
+            self._update_kiosk_toggle(True)
+        else:
+            if self._kiosk_manager:
+                self._kiosk_manager.deactivate()
+                self._kiosk_manager = None
+            self._update_kiosk_toggle(False)
