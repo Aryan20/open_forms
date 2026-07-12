@@ -40,6 +40,7 @@ class FormConfig(Gtk.Box):
     new_csv_btn: Gtk.Button = Gtk.Template.Child()
     build_form_btn: Gtk.Button = Gtk.Template.Child()
     edit_in_builder_btn: Gtk.Button = Gtk.Template.Child()
+    view_responses_btn: Gtk.Button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -54,6 +55,7 @@ class FormConfig(Gtk.Box):
         self.new_csv_btn.connect("clicked", self._create_new_csv)
         self.build_form_btn.connect("clicked", self._open_builder)
         self.edit_in_builder_btn.connect("clicked", self._edit_in_builder)
+        self.view_responses_btn.connect("clicked", self._open_response_viewer)
 
     def set_page(self, page):
         """
@@ -130,6 +132,7 @@ class FormConfig(Gtk.Box):
     def _try_form_open(self):
         if self.page.config_file and self.page.csv_file:
             self.create_form_btn.set_sensitive(True)
+            self.view_responses_btn.set_sensitive(True)
             self.create_form_btn.connect(
                 "clicked", self._open_form_window, self.page.form_config
             )
@@ -137,7 +140,7 @@ class FormConfig(Gtk.Box):
     def _load_config(self, file: Gio.File) -> dict:
         path = file.get_path()
         if path is None:
-            return
+            return {}
 
         with open(path, "r", encoding="utf-8") as f:
             config = json.load(f)
@@ -211,3 +214,13 @@ class FormConfig(Gtk.Box):
         # so the user can hit Save and overwrite in one click.
         builder.set_save_path(path)
         self.page.append(builder)
+
+    def _open_response_viewer(self, *_):
+        if not self.page or not self.page.csv_file:
+            return
+        csv_path = self.page.csv_file.get_path()
+        if not csv_path:
+            return
+        from .response_viewer import ResponseViewerDialog
+        dialog = ResponseViewerDialog(csv_path)
+        dialog.present(self.get_root())

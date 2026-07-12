@@ -7,37 +7,80 @@
       <child>
         <object class="AdwToastOverlay" id="form_toast_overlay">
           <child>
-            <object class="GtkBox">
-              <property name="orientation">vertical</property>
+            <object class="GtkStack" id="page_stack">
               <child>
-                <object class="GtkScrolledWindow">
-                  <property name="vexpand">True</property>
-                  <child>
-                    <object class="AdwClamp">
-                      <property name="maximum-size">500</property>
+                <object class="GtkStackPage">
+                  <property name="name">form</property>
+                  <property name="child">
+                    <object class="GtkBox">
+                      <property name="orientation">vertical</property>
                       <child>
-                        <object class="GtkBox" id="form_container">
-                          <property name="orientation">vertical</property>
-                          <property name="spacing">12</property>
-                          <property name="margin-top">24</property>
-                          <property name="margin-bottom">24</property>
+                        <object class="GtkScrolledWindow">
+                          <property name="vexpand">True</property>
+                          <child>
+                            <object class="AdwClamp">
+                              <property name="maximum-size">500</property>
+                              <child>
+                                <object class="GtkBox" id="form_container">
+                                  <property name="orientation">vertical</property>
+                                  <property name="spacing">12</property>
+                                  <property name="margin-top">24</property>
+                                  <property name="margin-bottom">24</property>
+                                  <property name="margin-start">24</property>
+                                  <property name="margin-end">24</property>
+                                </object>
+                              </child>
+                            </object>
+                          </child>
+                        </object>
+                      </child>
+                      <child>
+                        <object class="GtkCenterBox">
+                          <property name="orientation">horizontal</property>
+                          <property name="halign">fill</property>
+                          <property name="valign">center</property>
                           <property name="margin-start">24</property>
                           <property name="margin-end">24</property>
+                          <property name="margin-top">10</property>
+                          <property name="margin-bottom">10</property>
+                          <property name="start-widget">
+                            <object class="GtkBox">
+                              <property name="width-request">34</property>
+                            </object>
+                          </property>
+                          <property name="center-widget">
+                            <object class="GtkButton" id="submit_button">
+                              <property name="label">Submit</property>
+                              <property name="css-classes">suggested-action</property>
+                              <signal name="clicked" handler="on_submit_clicked"/>
+                              <property name="halign">center</property>
+                              <property name="valign">center</property>
+                              <property name="width-request">104</property>
+                            </object>
+                          </property>
+                          <property name="end-widget">
+                            <object class="GtkToggleButton" id="kiosk_toggle">
+                              <property name="halign">center</property>
+                              <property name="valign">center</property>
+                              <property name="margin-bottom">10</property>
+                            </object>
+                          </property>
                         </object>
                       </child>
                     </object>
-                  </child>
+                  </property>
                 </object>
               </child>
               <child>
-                <object class="GtkButton" id="submit_button">
-                  <property name="label">Submit</property>
-                  <property name="css-classes">suggested-action</property>
-                  <signal name="clicked" handler="on_submit_clicked"/>
-                  <property name="halign">center</property>
-                  <property name="margin-top">10</property>
-                  <property name="margin-bottom">10</property>
-                  <property name="width-request">104</property>
+                <object class="GtkStackPage">
+                  <property name="name">thankyou</property>
+                  <property name="child">
+                    <object class="GtkBox" id="thankyou_box">
+                      <property name="orientation">vertical</property>
+                      <property name="valign">center</property>
+                      <property name="halign">center</property>
+                    </object>
+                  </property>
                 </object>
               </child>
             </object>

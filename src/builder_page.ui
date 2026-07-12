@@ -13,52 +13,78 @@
             <property name="orientation">vertical</property>
             <!-- Scrollable content area -->
             <child>
-              <object class="GtkScrolledWindow">
+              <object class="GtkBox">
+                <property name="orientation">horizontal</property>
                 <property name="vexpand">True</property>
                 <property name="hexpand">True</property>
                 <child>
-                  <object class="AdwClamp">
-                    <property name="maximum-size">600</property>
-                    <property name="tightening-threshold">400</property>
+                  <object class="GtkScrolledWindow">
+                    <property name="vexpand">True</property>
+                    <property name="hexpand">True</property>
                     <child>
-                      <object class="GtkBox">
-                        <property name="orientation">vertical</property>
-                        <property name="spacing">18</property>
-                        <property name="margin-top">24</property>
-                        <property name="margin-bottom">24</property>
-                        <property name="margin-start">18</property>
-                        <property name="margin-end">18</property>
+                      <object class="AdwClamp">
+                        <property name="maximum-size">600</property>
+                        <property name="tightening-threshold">400</property>
                         <child>
-                          <object class="AdwPreferencesGroup">
-                            <property name="title">Form</property>
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">18</property>
+                            <property name="margin-top">24</property>
+                            <property name="margin-bottom">24</property>
+                            <property name="margin-start">18</property>
+                            <property name="margin-end">18</property>
                             <child>
-                              <object class="AdwEntryRow" id="form_name_row">
-                                <property name="title">Form Name</property>
+                              <object class="AdwPreferencesGroup">
+                                <property name="title">Form</property>
+                                <child>
+                                  <object class="AdwEntryRow" id="form_name_row">
+                                    <property name="title">Form Name</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <!-- Fields list — populated programmatically -->
+                            <child>
+                              <object class="AdwPreferencesGroup" id="fields_group">
+                                <property name="title">Fields</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton">
+                                <property name="halign">fill</property>
+                                <property name="css-classes">pill suggested-action</property>
+                                <signal name="clicked" handler="on_add_field_clicked"/>
+                                <property name="child">
+                                  <object class="AdwButtonContent">
+                                    <property name="icon-name">list-add-symbolic</property>
+                                    <property name="label" translatable="yes">Add Field</property>
+                                  </object>
+                                </property>
+                              </object>
+                            </child>
+                            <!-- Kiosk settings — rows added programmatically -->
+                            <child>
+                              <object class="AdwPreferencesGroup" id="kiosk_group">
+                                <property name="title">Kiosk Mode</property>
                               </object>
                             </child>
                           </object>
                         </child>
-                        <!-- Fields list — populated programmatically -->
-                        <child>
-                          <object class="AdwPreferencesGroup" id="fields_group">
-                            <property name="title">Fields</property>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkButton">
-                            <property name="halign">fill</property>
-                            <property name="css-classes">pill suggested-action</property>
-                            <signal name="clicked" handler="on_add_field_clicked"/>
-                            <property name="child">
-                              <object class="AdwButtonContent">
-                                <property name="icon-name">list-add-symbolic</property>
-                                <property name="label" translatable="yes">Add Field</property>
-                              </object>
-                            </property>
-                          </object>
-                        </child>
                       </object>
                     </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkSeparator" id="preview_separator">
+                    <property name="orientation">vertical</property>
+                    <property name="visible">False</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="preview_scroll">
+                    <property name="visible">False</property>
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
                   </object>
                 </child>
               </object>
@@ -109,6 +135,13 @@
                                 <property name="label" translatable="yes">Save</property>
                               </object>
                             </property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkToggleButton" id="preview_toggle">
+                            <property name="icon-name">view-dual-symbolic</property>
+                            <property name="tooltip-text" translatable="yes">Show live preview</property>
+                            <signal name="toggled" handler="on_preview_toggled"/>
                           </object>
                         </child>
                       </object>

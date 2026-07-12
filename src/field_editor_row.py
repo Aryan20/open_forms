@@ -17,6 +17,7 @@ from .form_model import FormField
 _FIELD_ICONS = {
     "entry":    "text-x-generic-symbolic",
     "text":     "insert-text-symbolic",
+    "dropdown": "pan-down-symbolic",
     "radio":    "checkbox-symbolic",
     "check":    "checkbox-checked-symbolic",
     "spin":     "list-add-symbolic",
@@ -25,7 +26,9 @@ _FIELD_ICONS = {
     "picture":  "image-x-generic-symbolic",
 }
 
-_REQUIRES_REQUIRED = ("entry", "text", "check", "radio", "calendar")
+_REQUIRES_REQUIRED = ("entry", "text", "check", "radio", "calendar", "dropdown")
+_SUPPORTS_PLACEHOLDER = ("entry", "text")
+_SUPPORTS_HELP_TEXT = ("entry", "text", "dropdown", "radio", "check", "spin", "calendar")
 
 
 class FieldEditorRow(Adw.ExpanderRow):
@@ -34,12 +37,21 @@ class FieldEditorRow(Adw.ExpanderRow):
     the dataclass in sync as the user edits properties.
     All changes are written directly into self.form_field — the builder
     page reads model.fields to serialise.
+
+    on_changed (if given) is called whenever a property changes, so the
+    builder can refresh its live preview.
     """
 
-    def __init__(self, form_field: FormField, on_delete, on_move_up, on_move_down):
+    def __init__(self, form_field: FormField, on_delete, on_move_up, on_move_down,
+                 on_changed=None):
         super().__init__()
         self.form_field = form_field
+        self._on_changed = on_changed
         self._build(on_delete, on_move_up, on_move_down)
+
+    def _notify_changed(self):
+        if self._on_changed:
+            self._on_changed()
 
     def _build(self, on_delete, on_move_up, on_move_down):
         self._refresh_title()
@@ -75,7 +87,7 @@ class FieldEditorRow(Adw.ExpanderRow):
             req_row.connect("notify::active", self._on_required_changed)
             self.add_row(req_row)
 
-        if ftype == "radio":
+        if ftype in ("radio", "dropdown"):
             self._build_options_editor()
 
         elif ftype == "spin":
@@ -89,7 +101,10 @@ class FieldEditorRow(Adw.ExpanderRow):
                 spin_row.set_value(float(getattr(self.form_field, attr)))
                 spin_row.connect(
                     "notify::value",
-                    lambda r, _, a=attr: setattr(self.form_field, a, r.get_value()),
+                    lambda r, _, a=attr: (
+                        setattr(self.form_field, a, r.get_value()),
+                        self._notify_changed(),
+                    ),
                 )
                 self.add_row(spin_row)
 
@@ -104,7 +119,10 @@ class FieldEditorRow(Adw.ExpanderRow):
             uri_row.set_text(self.form_field.uri)
             uri_row.connect(
                 "changed",
-                lambda r, *_: setattr(self.form_field, "uri", r.get_text()),
+                lambda r, *_: (
+                    setattr(self.form_field, "uri", r.get_text()),
+                    self._notify_changed(),
+                ),
             )
             self.add_row(uri_row)
 
@@ -114,20 +132,46 @@ class FieldEditorRow(Adw.ExpanderRow):
                 s.set_value(float(getattr(self.form_field, attr)))
                 s.connect(
                     "notify::value",
-                    lambda r, _, a=attr: setattr(self.form_field, a, int(r.get_value())),
+                    lambda r, _, a=attr: (
+                        setattr(self.form_field, a, int(r.get_value())),
+                        self._notify_changed(),
+                    ),
                 )
                 self.add_row(s)
+
+        if ftype in _SUPPORTS_PLACEHOLDER:
+            ph_row = Adw.EntryRow(title="Placeholder text")
+            ph_row.set_text(self.form_field.placeholder)
+            ph_row.connect("changed", self._on_placeholder_changed)
+            self.add_row(ph_row)
+
+        if ftype in _SUPPORTS_HELP_TEXT:
+            ht_row = Adw.EntryRow(title="Help text")
+            ht_row.set_text(self.form_field.help_text)
+            ht_row.connect("changed", self._on_help_text_changed)
+            self.add_row(ht_row)
 
     def _on_label_changed(self, row):
         self.form_field.label = row.get_text()
         self._refresh_title()
+        self._notify_changed()
 
     def _on_required_changed(self, row, _):
         self.form_field.required = row.get_active()
+        self._notify_changed()
 
     def _on_style_changed(self, row):
         raw = row.get_text()
         self.form_field.style = [s.strip() for s in raw.split(",") if s.strip()]
+        self._notify_changed()
+
+    def _on_placeholder_changed(self, row):
+        self.form_field.placeholder = row.get_text()
+        self._notify_changed()
+
+    def _on_help_text_changed(self, row):
+        self.form_field.help_text = row.get_text()
+        self._notify_changed()
 
     def _refresh_title(self):
         self.set_title(self.form_field.label or f"[{self.form_field.type}]")
@@ -171,3 +215,4 @@ class FieldEditorRow(Adw.ExpanderRow):
 
     def _sync_options(self):
         self.form_field.options = [r.get_text() for r in self._option_rows]
+        self._notify_changed()

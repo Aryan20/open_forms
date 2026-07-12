@@ -15,6 +15,7 @@ from gi.repository import Adw, Gtk
 _FIELD_TYPES = [
     ("entry",    "Short Text",      "text-x-generic-symbolic",       "Single-line text input"),
     ("text",     "Long Text",       "insert-text-symbolic",          "Multi-line text area"),
+    ("dropdown", "Dropdown",        "pan-down-symbolic",             "Single-select from a list"),
     ("radio",    "Multiple Choice", "checkbox-symbolic",             "Pick one from a list"),
     ("check",    "Checkbox",        "checkbox-checked-symbolic",     "Boolean yes/no toggle"),
     ("spin",     "Number",          "list-add-symbolic",             "Numeric spinner with range"),

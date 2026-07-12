@@ -38,6 +38,8 @@ open_forms_sources = [
   'field_editor_row.py',
   'field_type_dialog.py',
   'form_model.py',
+  'response_viewer.py',
+  'kiosk_manager.py',
 ]
 
 install_data(open_forms_sources, install_dir: moduledir)
