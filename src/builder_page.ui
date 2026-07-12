@@ -139,9 +139,14 @@
                         </child>
                         <child>
                           <object class="GtkToggleButton" id="preview_toggle">
-                            <property name="icon-name">view-dual-symbolic</property>
                             <property name="tooltip-text" translatable="yes">Show live preview</property>
                             <signal name="toggled" handler="on_preview_toggled"/>
+                            <property name="child">
+                              <object class="AdwButtonContent">
+                                <property name="icon-name">view-dual-symbolic</property>
+                                <property name="label" translatable="yes">Preview</property>
+                              </object>
+                            </property>
                           </object>
                         </child>
                       </object>
