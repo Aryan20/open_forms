@@ -44,6 +44,7 @@ class OpenFormsApplication(Adw.Application):
         self.form_config = None
         self.create_action("quit", lambda *_: self.quit(), ["<control>q"])
         self.create_action("about", self.on_about_action)
+        self.create_action("history", self.on_history_action)
 
     def do_activate(self):
         """Called when the application is activated.
@@ -68,6 +69,16 @@ class OpenFormsApplication(Adw.Application):
         )
         about.set_translator_credits(_("translator-credits"))
         about.present(self.props.active_window)
+
+    def on_history_action(self, *args):
+        """Callback for the app.history action."""
+        win = self.props.active_window
+        if not isinstance(win, OpenFormsWindow):
+            return
+        from .history_dialog import HistoryDialog
+
+        dialog = HistoryDialog(on_open=win.open_form_from_history)
+        dialog.present(win)
 
     def create_action(self, name, callback, shortcuts=None):
         """Add an application action.

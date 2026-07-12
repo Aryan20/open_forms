@@ -40,6 +40,8 @@ open_forms_sources = [
   'form_model.py',
   'response_viewer.py',
   'kiosk_manager.py',
+  'history_manager.py',
+  'history_dialog.py',
 ]
 
 install_data(open_forms_sources, install_dir: moduledir)

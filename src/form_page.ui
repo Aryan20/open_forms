@@ -62,7 +62,6 @@
                             <object class="GtkToggleButton" id="kiosk_toggle">
                               <property name="halign">center</property>
                               <property name="valign">center</property>
-                              <property name="margin-bottom">10</property>
                             </object>
                           </property>
                         </object>

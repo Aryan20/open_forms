@@ -56,6 +56,7 @@ class FormConfig(Gtk.Box):
         self.build_form_btn.connect("clicked", self._open_builder)
         self.edit_in_builder_btn.connect("clicked", self._edit_in_builder)
         self.view_responses_btn.connect("clicked", self._open_response_viewer)
+        self.create_form_btn.connect("clicked", self._open_form_window)
 
     def set_page(self, page):
         """
@@ -129,13 +130,16 @@ class FormConfig(Gtk.Box):
         except GLib.Error:
             pass
 
+    def preselect_csv(self, file: Gio.File):
+        """Called when reopening a form from history to pre-fill the CSV field."""
+        self.page.csv_file = file
+        self.open_csv_btn.set_label(file.get_basename())
+        self._try_form_open()
+
     def _try_form_open(self):
         if self.page.config_file and self.page.csv_file:
             self.create_form_btn.set_sensitive(True)
             self.view_responses_btn.set_sensitive(True)
-            self.create_form_btn.connect(
-                "clicked", self._open_form_window, self.page.form_config
-            )
 
     def _load_config(self, file: Gio.File) -> dict:
         path = file.get_path()
@@ -150,7 +154,15 @@ class FormConfig(Gtk.Box):
 
         return config
 
-    def _open_form_window(self, _button, __):
+    def _open_form_window(self, _button):
+        from .history_manager import add_entry
+
+        config_path = self.page.config_file.get_path() if self.page.config_file else None
+        csv_path = self.page.csv_file.get_path() if self.page.csv_file else None
+        if config_path:
+            form_name = (self.page.form_config or {}).get("form_name", "")
+            add_entry(form_name, config_path, csv_path)
+
         self.page.remove(self)
         form_page = FormPage()
         form_page.set_page(self.page)
