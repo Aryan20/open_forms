@@ -30,6 +30,7 @@ class NewPage(Gtk.Box):
         form_config = FormConfig()
         form_config.set_page(self)
         self.append(form_config)
+        self.form_config_widget = form_config
 
         self.config_file = None
         self.csv_file = None

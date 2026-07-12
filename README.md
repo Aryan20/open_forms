@@ -45,10 +45,10 @@ After searching for existing solutions and not finding anything that fit this us
 - Create form configurations directly from the GUI (no manual JSON editing)
 - Support for making fields required
 - Snap packaging support
+- Form history to quickly reopen recently used forms
 
 ### Planned
 - Strong form validation
-- Form history to quickly open them again
 
 ---
 

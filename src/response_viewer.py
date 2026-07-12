@@ -8,7 +8,7 @@ import csv
 import os
 import shutil
 
-from gi.repository import Adw, Gtk, GLib
+from gi.repository import Adw, Gtk
 
 
 class ResponseViewerDialog(Adw.Dialog):
