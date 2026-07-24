@@ -18,7 +18,19 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 
-from gi.repository import Adw
+from typing import cast
+
+from gi.repository import Adw, Gtk
+
+
+def root_as_widget(root: Gtk.Root | None) -> Gtk.Widget | None:
+    """Every real Gtk.Root is a Widget too, but the stubs don't say so."""
+    return cast(Gtk.Widget, root) if root is not None else None
+
+
+def root_as_window(root: Gtk.Root | None) -> Gtk.Window | None:
+    """Every real Gtk.Root here is a Window too, but the stubs don't say so."""
+    return cast(Gtk.Window, root) if root is not None else None
 
 
 def show_fatal_toast(toast_overlay) -> None:

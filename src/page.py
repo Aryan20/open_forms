@@ -17,8 +17,9 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-from gi.repository import Gtk
+from gi.repository import Adw, Gio, Gtk
 from .form_config import FormConfig
+from .sync.worker import SyncWorker
 
 
 class NewPage(Gtk.Box):
@@ -32,10 +33,11 @@ class NewPage(Gtk.Box):
         self.append(form_config)
         self.form_config_widget = form_config
 
-        self.config_file = None
-        self.csv_file = None
-        self.form_config = None
-        self.tab_page = None
+        self.config_file: Gio.File | None = None
+        self.csv_file: Gio.File | None = None
+        self.form_config: dict | None = None
+        self.tab_page: Adw.TabPage | None = None
+        self.sync_worker: SyncWorker | None = None
 
-    def set_tab_page(self, tab_page):
+    def set_tab_page(self, tab_page: Adw.TabPage) -> None:
         self.tab_page = tab_page

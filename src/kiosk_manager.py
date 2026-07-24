@@ -15,7 +15,7 @@ class KioskManager:
         self._cfg = kiosk_cfg
         self._idle_timer_id: int | None = None
         self._progress_timer_id: int | None = None
-        self._reset_countdown: int = 0
+        self._reset_countdown: float = 0
 
     def activate(self):
         root = self._form_page.get_root()

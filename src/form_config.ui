@@ -33,11 +33,12 @@
             <object class="GtkBox">
               <property name="orientation">0</property>
               <property name="spacing">8</property>
-              <property name="halign">center</property>
+              <property name="homogeneous">1</property>
               <property name="margin-top">10</property>
               <child>
                 <!-- Open JSON -->
                 <object class="GtkButton" id="open_form_config_btn">
+                  <property name="hexpand">1</property>
                   <property name="child">
                     <object class="AdwButtonContent">
                       <property name="icon-name">document-open-symbolic</property>
@@ -48,9 +49,10 @@
                 </object>
               </child>
               <child>
-                <!-- Edit in Builder — sensitive only after a config is selected -->
+                <!-- Edit in Builder - sensitive only after a config is selected -->
                 <object class="GtkButton" id="edit_in_builder_btn">
                   <property name="sensitive">0</property>
+                  <property name="hexpand">1</property>
                   <property name="tooltip-text" translatable="yes">Edit this config in the visual builder</property>
                   <property name="child">
                     <object class="AdwButtonContent">
@@ -104,15 +106,36 @@
       </object>
     </child>
     <child>
-      <object class="GtkButton" id="view_responses_btn">
-        <property name="sensitive">0</property>
+      <object class="GtkBox">
+        <property name="orientation">0</property>
+        <property name="spacing">8</property>
+        <property name="homogeneous">1</property>
         <property name="margin-top">10</property>
-        <property name="child">
-          <object class="AdwButtonContent">
-            <property name="icon-name">view-list-symbolic</property>
-            <property name="label" translatable="yes">View Responses</property>
+        <child>
+          <object class="GtkButton" id="view_responses_btn">
+            <property name="sensitive">0</property>
+            <property name="hexpand">1</property>
+            <property name="child">
+              <object class="AdwButtonContent">
+                <property name="icon-name">view-list-symbolic</property>
+                <property name="label" translatable="yes">View Responses</property>
+              </object>
+            </property>
           </object>
-        </property>
+        </child>
+        <child>
+          <object class="GtkButton" id="sync_btn">
+            <property name="sensitive">0</property>
+            <property name="hexpand">1</property>
+            <property name="tooltip-text" translatable="yes">Push responses to Google Sheets or WebDAV</property>
+            <property name="child">
+              <object class="AdwButtonContent">
+                <property name="icon-name">emblem-synchronizing-symbolic</property>
+                <property name="label" translatable="yes">Sync</property>
+              </object>
+            </property>
+          </object>
+        </child>
       </object>
     </child>
     <child>

@@ -12,6 +12,7 @@
 import json
 import uuid
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -45,7 +46,7 @@ class FormField:
 
     def to_dict(self) -> dict:
         """Emit only the keys that form_page.py actually reads."""
-        base = {"id": self.id, "type": self.type, "label": self.label}
+        base: dict[str, Any] = {"id": self.id, "type": self.type, "label": self.label}
 
         if self.type in ("entry", "text", "check", "radio", "calendar", "dropdown"):
             if self.required:

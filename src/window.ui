@@ -58,6 +58,10 @@
         <attribute name="action">app.history</attribute>
       </item>
       <item>
+        <attribute name="label" translatable="yes">_Sync Settings</attribute>
+        <attribute name="action">app.sync_settings</attribute>
+      </item>
+      <item>
         <attribute name="label" translatable="yes">_Keyboard Shortcuts</attribute>
         <attribute name="action">app.shortcuts</attribute>
       </item>

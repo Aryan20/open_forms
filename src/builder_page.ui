@@ -43,7 +43,7 @@
                                 </child>
                               </object>
                             </child>
-                            <!-- Fields list — populated programmatically -->
+                            <!-- Fields list - populated programmatically -->
                             <child>
                               <object class="AdwPreferencesGroup" id="fields_group">
                                 <property name="title">Fields</property>
@@ -62,7 +62,7 @@
                                 </property>
                               </object>
                             </child>
-                            <!-- Kiosk settings — rows added programmatically -->
+                            <!-- Kiosk settings - rows added programmatically -->
                             <child>
                               <object class="AdwPreferencesGroup" id="kiosk_group">
                                 <property name="title">Kiosk Mode</property>

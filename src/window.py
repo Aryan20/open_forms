@@ -41,8 +41,17 @@ class OpenFormsWindow(Adw.ApplicationWindow):
         self.new_tab_button.connect("clicked", lambda _: self.add_page())
         self.overview.connect("create-tab", lambda _: self.add_page())
         self.tab_view.connect("create-window", lambda _: self.create_new_window())
+        self.tab_view.connect("page-detached", self._on_page_detached)
 
         self.add_page()
+
+    def _on_page_detached(self, _tab_view, page, _position):
+        """Stop a form's SyncWorker when its tab closes so it doesn't keep running."""
+        child = page.get_child()
+        sync_worker = getattr(child, "sync_worker", None)
+        if sync_worker is not None:
+            sync_worker.stop()
+            child.sync_worker = None
 
     def add_page(self):
         page_box = NewPage()

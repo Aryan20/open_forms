@@ -6,7 +6,7 @@
 
 
 **OpenForms** is a simple, local-first form collection app for GNOME.  
-It is designed for situations where setting up online forms is impractical or unreliable — such as conferences, meetups, workshops, or community events.
+It is designed for situations where setting up online forms is impractical or unreliable - such as conferences, meetups, workshops, or community events.
 
 OpenForms works fully offline, stores responses locally, and avoids unnecessary complexity.
 
