@@ -19,10 +19,13 @@
 
 import csv
 import os
+from datetime import datetime, timezone
 
 from gi.repository import Adw, Gtk, Gio
 
 from .utils import show_fatal_toast
+
+_TIMESTAMP_LABEL = "Submitted At"
 
 
 @Gtk.Template(resource_path="/in/aryank/openforms/form_page.ui")
@@ -109,7 +112,7 @@ class FormPage(Gtk.Box):
             assert "label" in field
             label = field["label"]
             row, widget, label_widget = self._create_field(label, field)
-            if widget:
+            if widget and row:
                 self.fields[field.get("id")] = {
                     "widget": widget,
                     "label_widget": label_widget,
@@ -188,12 +191,12 @@ class FormPage(Gtk.Box):
             return row, None, label
         elif field_type == "picture":
             try:
-                file = Gio.File.new_for_uri(field.get("uri", None))
+                file = Gio.File.new_for_uri(field.get("uri", ""))
                 widget = Gtk.Picture()
                 widget.set_file(file)
-                widget.set_halign(3)
-                widget.set_valign(3)
-                widget.can_shrink = True
+                widget.set_halign(Gtk.Align.CENTER)
+                widget.set_valign(Gtk.Align.CENTER)
+                widget.set_can_shrink(True)
                 width = field.get("width", 20)
                 height = field.get("height", 20)
                 widget.set_size_request(width, height)
@@ -250,7 +253,7 @@ class FormPage(Gtk.Box):
             toast.set_timeout(1)
             self.form_toast_overlay.add_toast(toast)
 
-    def _collect_data(self) -> dict:
+    def _collect_data(self) -> dict | None:
         data = {}
 
         for field_id, field_dict in self.fields.items():
@@ -284,15 +287,14 @@ class FormPage(Gtk.Box):
             active = widget.get_active()
             field_value = True if active else False
         elif isinstance(widget, Gtk.Calendar):
-            date = widget.get_date().format_iso8601()
-            field_value = date
+            field_value = widget.get_date().format("%Y-%m-%d")
         elif isinstance(widget, Gtk.SpinButton):
             field_value = widget.get_value_as_int()
         elif isinstance(widget, Gtk.DropDown):
             idx = widget.get_selected()
             if idx != Gtk.INVALID_LIST_POSITION:
                 model = widget.get_model()
-                if model:
+                if isinstance(model, Gtk.StringList):
                     field_value = model.get_string(idx)
 
         return field_value
@@ -339,18 +341,56 @@ class FormPage(Gtk.Box):
         if path is None:
             show_fatal_toast(self.form_toast_overlay)
             return
-        file_exists = os.path.exists(path)
+
+        is_new_file = not os.path.exists(path) or os.stat(path).st_size == 0
+        timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+        if is_new_file:
+            row = {_TIMESTAMP_LABEL: timestamp}
+            row.update(self._labeled_row(data))
+            fieldnames = list(row.keys())
+        else:
+            # keep whatever header the file already has, fill it positionally
+            fieldnames = self._read_csv_header(path)
+            values = list(data.values())
+            if fieldnames[:1] == [_TIMESTAMP_LABEL]:
+                values = [timestamp] + values
+            row = dict(zip(fieldnames, values))
 
         try:
             with open(path, "a", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=data.keys())
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
 
-                if not file_exists or os.stat(path).st_size == 0:
+                if is_new_file:
                     writer.writeheader()
 
-                writer.writerow(data)
+                writer.writerow(row)
         except Exception as _e:
             show_fatal_toast(self.form_toast_overlay)
+            return
+
+        sync_worker = getattr(self.page, "sync_worker", None)
+        if sync_worker is not None:
+            sync_worker.trigger()
+
+    def _labeled_row(self, data: dict) -> dict:
+        """Map field-id keys to their labels, de-duplicating any that collide."""
+        row = {}
+        for field_id, value in data.items():
+            label = self.fields.get(field_id, {}).get("config", {}).get("label", field_id)
+            unique_label, n = label, 2
+            while unique_label in row:
+                unique_label = f"{label} ({n})"
+                n += 1
+            row[unique_label] = value
+        return row
+
+    def _read_csv_header(self, path: str) -> list:
+        try:
+            with open(path, newline="", encoding="utf-8") as f:
+                return next(csv.reader(f), [])
+        except OSError:
+            return []
 
     def _reset_form(self):
         for fields_dict in self.fields.values():

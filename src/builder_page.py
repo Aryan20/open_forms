@@ -16,6 +16,7 @@ from gi.repository import Adw, Gtk, Gio
 from .form_model import FormField, FormModel
 from .field_editor_row import FieldEditorRow
 from .field_type_dialog import FieldTypeDialog
+from .utils import root_as_widget, root_as_window
 
 
 @Gtk.Template(resource_path="/in/aryank/openforms/builder_page.ui")
@@ -123,7 +124,7 @@ class BuilderPage(Gtk.Box):
     @Gtk.Template.Callback()
     def on_add_field_clicked(self, *_):
         dialog = FieldTypeDialog(self._add_field_of_type)
-        dialog.present(self.get_root())
+        dialog.present(root_as_widget(self.get_root()))
 
     @Gtk.Template.Callback()
     def on_save_clicked(self, *_):
@@ -147,7 +148,7 @@ class BuilderPage(Gtk.Box):
             safe_name = (self.model.form_name or "form").lower().replace(" ", "_")
             file_dialog.set_initial_name(safe_name + ".json")
 
-        file_dialog.save(self.get_root(), None, self._on_save_finish)
+        file_dialog.save(root_as_window(self.get_root()), None, self._on_save_finish)
 
     def _on_form_name_changed(self, row):
         self.model.form_name = row.get_text()

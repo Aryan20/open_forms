@@ -18,10 +18,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import json
+from typing import TYPE_CHECKING
+
 from gi.repository import Gtk, Gio, GLib
 
 from .form_page import FormPage
 from .builder_page import BuilderPage
+from .utils import root_as_widget
+
+if TYPE_CHECKING:
+    from .page import NewPage
 
 
 @Gtk.Template(resource_path="/in/aryank/openforms/form_config.ui")
@@ -41,6 +47,7 @@ class FormConfig(Gtk.Box):
     build_form_btn: Gtk.Button = Gtk.Template.Child()
     edit_in_builder_btn: Gtk.Button = Gtk.Template.Child()
     view_responses_btn: Gtk.Button = Gtk.Template.Child()
+    sync_btn: Gtk.Button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -48,7 +55,7 @@ class FormConfig(Gtk.Box):
         self.set_vexpand(True)
         self.set_hexpand(True)
 
-        self.page = None
+        self.page: "NewPage | None" = None
 
         self.open_form_config_btn.connect("clicked", self._open_json_config)
         self.open_csv_btn.connect("clicked", self._open_csv)
@@ -56,9 +63,10 @@ class FormConfig(Gtk.Box):
         self.build_form_btn.connect("clicked", self._open_builder)
         self.edit_in_builder_btn.connect("clicked", self._edit_in_builder)
         self.view_responses_btn.connect("clicked", self._open_response_viewer)
+        self.sync_btn.connect("clicked", self._open_sync_settings)
         self.create_form_btn.connect("clicked", self._open_form_window)
 
-    def set_page(self, page):
+    def set_page(self, page: "NewPage"):
         """
         Set the page instance inside FormConfig to be able to load the
         form inside the page.
@@ -109,6 +117,8 @@ class FormConfig(Gtk.Box):
     def _on_json_selected(self, dialog, result):
         try:
             file = dialog.open_finish(result)
+            if not self.page:
+                return
 
             self.page.config_file = file
             self.page.form_config = self._load_config(file)
@@ -124,6 +134,8 @@ class FormConfig(Gtk.Box):
     def _on_csv_selected(self, dialog, result):
         try:
             file = dialog.open_finish(result)
+            if not self.page:
+                return
             self.open_csv_btn.set_label(file.get_basename())
             self.page.csv_file = file
             self._try_form_open()
@@ -132,14 +144,19 @@ class FormConfig(Gtk.Box):
 
     def preselect_csv(self, file: Gio.File):
         """Called when reopening a form from history to pre-fill the CSV field."""
+        if not self.page:
+            return
         self.page.csv_file = file
-        self.open_csv_btn.set_label(file.get_basename())
+        self.open_csv_btn.set_label(file.get_basename() or "")
         self._try_form_open()
 
     def _try_form_open(self):
+        if not self.page:
+            return
         if self.page.config_file and self.page.csv_file:
             self.create_form_btn.set_sensitive(True)
             self.view_responses_btn.set_sensitive(True)
+            self.sync_btn.set_sensitive(True)
 
     def _load_config(self, file: Gio.File) -> dict:
         path = file.get_path()
@@ -156,6 +173,9 @@ class FormConfig(Gtk.Box):
 
     def _open_form_window(self, _button):
         from .history_manager import add_entry
+
+        if not self.page:
+            return
 
         config_path = self.page.config_file.get_path() if self.page.config_file else None
         csv_path = self.page.csv_file.get_path() if self.page.csv_file else None
@@ -174,13 +194,17 @@ class FormConfig(Gtk.Box):
         field, so the user only needs to pick a CSV and click Open Form.
         Mirrors what _on_json_selected does but without the file dialog.
         """
+        if not self.page:
+            return
         self.page.config_file = file
         self.page.form_config = self._load_config(file)
-        self.open_form_config_btn.set_label(file.get_basename())
+        self.open_form_config_btn.set_label(file.get_basename() or "")
         self.edit_in_builder_btn.set_sensitive(True)
         self._try_form_open()
 
     def _open_builder(self, *_):
+        if not self.page or not self.page.tab_page:
+            return
         self.page.tab_page.set_title("New Form")
 
         self.page.remove(self)
@@ -198,6 +222,9 @@ class FormConfig(Gtk.Box):
         """
         from .form_model import FormModel
 
+        if not self.page or not self.page.tab_page:
+            return
+
         config_file = self.page.config_file
         if not config_file:
             return
@@ -209,9 +236,6 @@ class FormConfig(Gtk.Box):
         try:
             model = FormModel.from_file(path)
         except Exception as e:
-            # Malformed JSON — surface the error via the existing toast pattern
-            # by falling back gracefully; the file was already validated by
-            # _load_config so this should only happen on disk race conditions.
             print(f"Could not parse config for editing: {e}")
             return
 
@@ -222,8 +246,6 @@ class FormConfig(Gtk.Box):
         builder = BuilderPage()
         builder.set_page(self.page)
         builder.load_from_model(model)
-        # Pre-set the save dialog's suggested path to the original file
-        # so the user can hit Save and overwrite in one click.
         builder.set_save_path(path)
         self.page.append(builder)
 
@@ -235,4 +257,13 @@ class FormConfig(Gtk.Box):
             return
         from .response_viewer import ResponseViewerDialog
         dialog = ResponseViewerDialog(csv_path)
-        dialog.present(self.get_root())
+        dialog.present(root_as_widget(self.get_root()))
+
+    def _open_sync_settings(self, *_):
+        if not self.page or not self.page.csv_file or not self.page.config_file:
+            return
+        if not self.page.csv_file.get_path():
+            return
+        from .sync_panel import FormSyncPanel
+        dialog = FormSyncPanel(self.page)
+        dialog.present(root_as_widget(self.get_root()))

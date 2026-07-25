@@ -45,6 +45,7 @@ class OpenFormsApplication(Adw.Application):
         self.create_action("quit", lambda *_: self.quit(), ["<control>q"])
         self.create_action("about", self.on_about_action)
         self.create_action("history", self.on_history_action)
+        self.create_action("sync_settings", self.on_sync_settings_action)
 
     def do_activate(self):
         """Called when the application is activated.
@@ -79,6 +80,13 @@ class OpenFormsApplication(Adw.Application):
 
         dialog = HistoryDialog(on_open=win.open_form_from_history)
         dialog.present(win)
+
+    def on_sync_settings_action(self, *args):
+        """Callback for the app.sync_settings action."""
+        from .sync_settings_dialog import SyncSettingsDialog
+
+        dialog = SyncSettingsDialog()
+        dialog.present(self.props.active_window)
 
     def create_action(self, name, callback, shortcuts=None):
         """Add an application action.
