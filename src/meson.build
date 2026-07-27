@@ -46,9 +46,8 @@ open_forms_sources = [
 
 install_data(open_forms_sources, install_dir: moduledir)
 
-# Sync layer (SYNC_ARCHITECTURE.md): pushes collected responses to Google
-# Sheets or WebDAV/Nextcloud. Requires the network + secrets Flatpak
-# permissions declared in the app manifest.
+# Sync layer: pushes collected responses to Google Sheets or WebDAV/Nextcloud.
+# Requires the network + secrets Flatpak permissions declared in the app manifest.
 sync_sources = files(
   'sync/__init__.py',
   'sync/backend.py',

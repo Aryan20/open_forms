@@ -17,11 +17,10 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
-WebDAV / Nextcloud sync backend (SYNC_ARCHITECTURE.md §5). No OAuth - basic
-auth with a username + app password stored in the GNOME Keyring under a
-fixed app-wide scope, shared by every form (configured once in
-sync_settings_dialog.py). Each form only picks its own destination URL -
-see link() and sync_panel.py.
+WebDAV / Nextcloud sync backend. No OAuth - basic auth with a username +
+app password stored via sync/keyring.py under a fixed app-wide scope,
+shared by every form (configured once in sync_settings_dialog.py). Each
+form only picks its own destination URL - see link() and sync_panel.py.
 
 The remote file is a shared log other devices (or a linked Google Form)
 may also write to, so push_pending() never overwrites it - it fetches,

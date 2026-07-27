@@ -23,6 +23,8 @@ credentials. Per-form choices (whether a form syncs at all, which sheet or
 URL it targets) live in each form's own panel — see sync_panel.py.
 """
 
+import threading
+
 from gi.repository import Adw, GLib, Gtk
 
 from .sync import keyring
@@ -67,10 +69,10 @@ class SyncSettingsDialog(Adw.Dialog):
         google_group.add(self._client_secret_row)
 
         save_google_row = Adw.ActionRow()
-        save_google_btn = Gtk.Button(label="Save", valign=Gtk.Align.CENTER)
-        save_google_btn.add_css_class("suggested-action")
-        save_google_btn.connect("clicked", self._on_save_google_clicked)
-        save_google_row.add_suffix(save_google_btn)
+        self._save_google_btn = Gtk.Button(label="Save", valign=Gtk.Align.CENTER)
+        self._save_google_btn.add_css_class("suggested-action")
+        self._save_google_btn.connect("clicked", self._on_save_google_clicked)
+        save_google_row.add_suffix(self._save_google_btn)
         google_group.add(save_google_row)
 
         self._google_account_row = Adw.ActionRow(title="Google Account", subtitle="Not connected")
@@ -92,10 +94,10 @@ class SyncSettingsDialog(Adw.Dialog):
         webdav_group.add(self._webdav_pass_row)
 
         self._webdav_status_row = Adw.ActionRow(title="Credentials", subtitle="Not configured")
-        save_webdav_btn = Gtk.Button(label="Save", valign=Gtk.Align.CENTER)
-        save_webdav_btn.add_css_class("suggested-action")
-        save_webdav_btn.connect("clicked", self._on_save_webdav_clicked)
-        self._webdav_status_row.add_suffix(save_webdav_btn)
+        self._save_webdav_btn = Gtk.Button(label="Save", valign=Gtk.Align.CENTER)
+        self._save_webdav_btn.add_css_class("suggested-action")
+        self._save_webdav_btn.connect("clicked", self._on_save_webdav_clicked)
+        self._webdav_status_row.add_suffix(self._save_webdav_btn)
         webdav_group.add(self._webdav_status_row)
 
         behaviour_group = Adw.PreferencesGroup(title="Sync Behaviour")
@@ -112,16 +114,26 @@ class SyncSettingsDialog(Adw.Dialog):
     # -- State ---------------------------------------------------------------
 
     def _load_state(self):
-        self._client_id_row.set_text(GoogleSheetsBackend.get_client_id() or "")
         self._client_secret_row.set_text("")
+        self._webdav_pass_row.set_text("")
+        self._interval_row.set_value(get_interval())
+        self._google_account_row.set_subtitle("Loading…")
+        self._webdav_status_row.set_subtitle("Loading…")
+
+        def _warm():
+            keyring.warm_cache()
+            GLib.idle_add(self._finish_load_state)
+
+        threading.Thread(target=_warm, daemon=True).start()
+
+    def _finish_load_state(self):
+        self._client_id_row.set_text(GoogleSheetsBackend.get_client_id() or "")
         self._update_secret_placeholder()
         self._refresh_google_status()
 
         self._webdav_user_row.set_text(WebDAVBackend.get_username() or "")
-        self._webdav_pass_row.set_text("")
         self._refresh_webdav_status()
-
-        self._interval_row.set_value(get_interval())
+        return GLib.SOURCE_REMOVE
 
     def _update_secret_placeholder(self):
         if GoogleSheetsBackend.has_client_credentials():
@@ -150,16 +162,35 @@ class SyncSettingsDialog(Adw.Dialog):
         if not client_id:
             self._google_account_row.set_subtitle("Enter a Client ID first")
             return
-        if not secret:
-            secret = GoogleSheetsBackend.get_client_secret() or ""
-        if not secret:
-            self._google_account_row.set_subtitle("Enter a Client Secret first")
-            return
 
-        GoogleSheetsBackend.set_client_credentials(client_id, secret)
-        self._client_secret_row.set_text("")
-        self._update_secret_placeholder()
-        self._google_account_row.set_subtitle("Client credentials saved")
+        self._save_google_btn.set_sensitive(False)
+        self._google_account_row.set_subtitle("Saving…")
+
+        def _save():
+            # Keyring calls can block on a portal round trip - keep off the UI thread.
+            nonlocal secret
+            try:
+                if not secret:
+                    secret = GoogleSheetsBackend.get_client_secret() or ""
+                if not secret:
+                    GLib.idle_add(self._on_google_save_done, "Enter a Client Secret first")
+                    return
+                GoogleSheetsBackend.set_client_credentials(client_id, secret)
+                GLib.idle_add(self._on_google_save_done, None)
+            except keyring.KeyringUnavailable as e:
+                GLib.idle_add(self._on_google_save_done, f"Could not save credentials: {e}")
+
+        threading.Thread(target=_save, daemon=True).start()
+
+    def _on_google_save_done(self, error):
+        self._save_google_btn.set_sensitive(True)
+        if error:
+            self._google_account_row.set_subtitle(error)
+        else:
+            self._client_secret_row.set_text("")
+            self._update_secret_placeholder()
+            self._google_account_row.set_subtitle("Client credentials saved")
+        return GLib.SOURCE_REMOVE
 
     def _on_google_connect_clicked(self, *_):
         if GoogleSheetsBackend.is_connected():
@@ -196,18 +227,36 @@ class SyncSettingsDialog(Adw.Dialog):
         if not username:
             self._webdav_status_row.set_subtitle("Enter a username first")
             return
-        if not password:
-            existing = WebDAVBackend.is_connected()
-            if not existing:
-                self._webdav_status_row.set_subtitle("Enter a password first")
-                return
-            # Leave the saved password untouched — only the username changed.
-            current = keyring.load_token("app", "webdav")
-            password = current["password"] if current else ""
 
-        WebDAVBackend.set_credentials(username, password)
-        self._webdav_pass_row.set_text("")
-        self._refresh_webdav_status()
+        self._save_webdav_btn.set_sensitive(False)
+        self._webdav_status_row.set_subtitle("Saving…")
+
+        def _save():
+            # Keyring calls can block on a portal round trip - keep off the UI thread.
+            nonlocal password
+            try:
+                if not password:
+                    if not WebDAVBackend.is_connected():
+                        GLib.idle_add(self._on_webdav_save_done, "Enter a password first")
+                        return
+                    # Leave the saved password untouched — only the username changed.
+                    current = keyring.load_token("app", "webdav")
+                    password = current["password"] if current else ""
+                WebDAVBackend.set_credentials(username, password)
+                GLib.idle_add(self._on_webdav_save_done, None)
+            except keyring.KeyringUnavailable as e:
+                GLib.idle_add(self._on_webdav_save_done, f"Could not save credentials: {e}")
+
+        threading.Thread(target=_save, daemon=True).start()
+
+    def _on_webdav_save_done(self, error):
+        self._save_webdav_btn.set_sensitive(True)
+        if error:
+            self._webdav_status_row.set_subtitle(error)
+        else:
+            self._webdav_pass_row.set_text("")
+            self._refresh_webdav_status()
+        return GLib.SOURCE_REMOVE
 
     # -- Behaviour ------------------------------------------------------------
 

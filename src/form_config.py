@@ -49,6 +49,11 @@ class FormConfig(Gtk.Box):
     view_responses_btn: Gtk.Button = Gtk.Template.Child()
     sync_btn: Gtk.Button = Gtk.Template.Child()
 
+    # AdwButtonContent children of the buttons above - see _set_picked_filename().
+    open_form_config_content = Gtk.Template.Child()
+    new_csv_content = Gtk.Template.Child()
+    open_csv_content = Gtk.Template.Child()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -72,6 +77,11 @@ class FormConfig(Gtk.Box):
         form inside the page.
         """
         self.page = page
+
+    def _set_picked_filename(self, content, basename: str) -> None:
+        """Set the label directly - Gtk.Button.set_label() would replace
+        this AdwButtonContent (icon + label) wholesale."""
+        content.set_label(basename)
 
     def _open_file(self, title, suffix, callback):
         dialog = Gtk.FileDialog(title=title)
@@ -103,7 +113,7 @@ class FormConfig(Gtk.Box):
     def _on_new_csv_selected(self, dialog, result):
         try:
             file = dialog.save_finish(result)
-            self.new_csv_btn.set_label(file.get_basename())
+            self._set_picked_filename(self.new_csv_content, file.get_basename())
             if not self.page:
                 return
             self.page.csv_file = file
@@ -122,7 +132,7 @@ class FormConfig(Gtk.Box):
 
             self.page.config_file = file
             self.page.form_config = self._load_config(file)
-            self.open_form_config_btn.set_label(file.get_basename())
+            self._set_picked_filename(self.open_form_config_content, file.get_basename())
             self.edit_in_builder_btn.set_sensitive(True)
             self._try_form_open()
         except GLib.Error:
@@ -136,7 +146,7 @@ class FormConfig(Gtk.Box):
             file = dialog.open_finish(result)
             if not self.page:
                 return
-            self.open_csv_btn.set_label(file.get_basename())
+            self._set_picked_filename(self.open_csv_content, file.get_basename())
             self.page.csv_file = file
             self._try_form_open()
         except GLib.Error:
@@ -147,7 +157,7 @@ class FormConfig(Gtk.Box):
         if not self.page:
             return
         self.page.csv_file = file
-        self.open_csv_btn.set_label(file.get_basename() or "")
+        self._set_picked_filename(self.open_csv_content, file.get_basename() or "")
         self._try_form_open()
 
     def _try_form_open(self):
@@ -198,7 +208,7 @@ class FormConfig(Gtk.Box):
             return
         self.page.config_file = file
         self.page.form_config = self._load_config(file)
-        self.open_form_config_btn.set_label(file.get_basename() or "")
+        self._set_picked_filename(self.open_form_config_content, file.get_basename() or "")
         self.edit_in_builder_btn.set_sensitive(True)
         self._try_form_open()
 

@@ -27,7 +27,7 @@ from .queue import log_sync_error
 class SyncWorker(threading.Thread):
     """
     Background thread (daemon, so it never blocks app exit) that periodically
-    pushes pending CSV rows to a SyncBackend. See SYNC_ARCHITECTURE.md §3.2.
+    pushes pending CSV rows to a SyncBackend.
 
     This class never touches GTK. `on_status(status, message)` is invoked from
     the worker thread itself — callers that update widgets must marshal it

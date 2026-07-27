@@ -1,9 +1,9 @@
 name: open-forms
 base: core24
-version: "0.4.0"
+version: "0.5.0"
 summary: Open Forms
 description: |
-  Open Forms is a simple, local-first form collection app for GNOME. It is designed for situations where setting up online forms is impractical or unreliable - such as conferences, meetups, workshops, or community events. 
+  Open Forms is a simple, local-first form collection app for GNOME. It is designed for situations where setting up online forms is impractical or unreliable - such as conferences, meetups, workshops, or community events. Network access is only required for sync to work. 
 icon: usr/share/icons/hicolor/128x128/apps/in.aryank.openforms.png
 title: Open Forms
 contact: mailto:aryan-kaushik@ubuntu.com
@@ -29,6 +29,8 @@ apps:
         - wayland
         - x11
         - gsettings
+        - network
+        - network-bind
 
 parts:
   open-forms:
