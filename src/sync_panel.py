@@ -17,11 +17,10 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
-Per-form sync panel (SYNC_ARCHITECTURE.md §6, adapted). Lets a single form
-opt into pushing its responses to Google Sheets or WebDAV, and pick which
-sheet/URL it targets. Account-level credentials (OAuth client, Google
-connection, WebDAV username/password) are configured once, app-wide, in
-sync_settings_dialog.py - not here.
+Per-form sync panel. Lets a single form opt into pushing its responses to
+Google Sheets or WebDAV, and pick which sheet/URL it targets. Account-level
+credentials (OAuth client, Google connection, WebDAV username/password)
+are configured once, app-wide, in sync_settings_dialog.py - not here.
 """
 
 import threading
@@ -31,7 +30,17 @@ from gi.repository import Adw, GLib, Gtk
 from .sync import BACKEND_LABELS, get_backend, is_backend_configured
 from .sync.backend import SyncError
 from .sync.google_sheets import extract_gid, extract_spreadsheet_id
-from .sync.queue import db_path_for_csv, get_config, init_db, last_log_entry, set_config
+from .sync.queue import (
+    count_csv_rows,
+    db_path_for_csv,
+    get_config,
+    get_last_synced_row,
+    init_db,
+    last_log_entry,
+    mark_all_synced,
+    reset_sync_progress,
+    set_config,
+)
 from .sync.settings import get_interval
 from .sync.worker import SyncWorker
 from .utils import root_as_widget
@@ -109,6 +118,15 @@ class FormSyncPanel(Adw.Dialog):
         self._sync_now_btn.connect("clicked", self._on_sync_now_clicked)
         self._status_row.add_suffix(self._sync_now_btn)
         status_group.add(self._status_row)
+
+        resync_row = Adw.ActionRow(
+            title="Sync All Responses",
+            subtitle="Also push responses recorded before this destination was linked",
+        )
+        resync_btn = Gtk.Button(label="Sync All", valign=Gtk.Align.CENTER)
+        resync_btn.connect("clicked", self._on_full_resync_clicked)
+        resync_row.add_suffix(resync_btn)
+        status_group.add(resync_row)
 
         toolbar_view.set_content(page)
         self.set_child(toolbar_view)
@@ -210,7 +228,11 @@ class FormSyncPanel(Adw.Dialog):
         if error:
             self._status_row.set_subtitle(f"Error: {error}")
         else:
+            previous_sheet_id = get_config(self._db_path, "sheet_id")
             backend.link_sheet(self._db_path, sheet_id, tab_name)
+            if sheet_id != previous_sheet_id:
+                # A newly-linked sheet starts clean - see "Sync All Responses" for the opt-in backfill.
+                mark_all_synced(self._db_path, self._csv_path)
             self._status_row.set_subtitle(f'Linked to tab "{tab_name}"')
             self._ensure_worker()
         return GLib.SOURCE_REMOVE
@@ -238,6 +260,7 @@ class FormSyncPanel(Adw.Dialog):
         else:
             self._sheet_id_row.set_text(sheet_id)
             backend.link_sheet(self._db_path, sheet_id, self._form_name)
+            mark_all_synced(self._db_path, self._csv_path)  # freshly created sheet - always a clean slate
             self._status_row.set_subtitle("Spreadsheet created and linked")
             self._ensure_worker()
         return GLib.SOURCE_REMOVE
@@ -248,8 +271,12 @@ class FormSyncPanel(Adw.Dialog):
         url = self._webdav_url_row.get_text().strip()
         if not url:
             return
+        previous_url = get_config(self._db_path, "webdav_url")
         backend = get_backend("webdav", self._form_name)
         backend.link(self._db_path, url)
+        if url != previous_url:
+            # A newly-linked URL starts clean - see "Sync All Responses" for the opt-in backfill.
+            mark_all_synced(self._db_path, self._csv_path)
         self._ensure_worker()
 
     # -- Worker lifecycle ---------------------------------------------------
@@ -283,6 +310,37 @@ class FormSyncPanel(Adw.Dialog):
         else:
             self._page.sync_worker.trigger()
         self._status_row.set_subtitle("Syncing…")
+
+    def _on_full_resync_clicked(self, *_):
+        backend_id = self._selected_backend_id()
+        if not backend_id or not is_backend_configured(backend_id):
+            self._status_row.set_subtitle("Pick and configure a destination first")
+            return
+
+        count = count_csv_rows(self._csv_path)
+        if count == 0:
+            self._status_row.set_subtitle("No responses recorded yet")
+            return
+
+        body = f"This pushes all {count} response(s) recorded for this form to {BACKEND_LABELS[backend_id]}."
+        if get_last_synced_row(self._db_path) >= 0:
+            body += " Responses already synced will be sent again, which may create duplicates there."
+
+        dialog = Adw.AlertDialog(heading="Sync All Responses?", body=body)
+        dialog.add_response("cancel", "Cancel")
+        dialog.add_response("sync", "Sync All")
+        dialog.set_response_appearance("sync", Adw.ResponseAppearance.SUGGESTED)
+        dialog.set_default_response("cancel")
+        dialog.set_close_response("cancel")
+        dialog.connect("response", self._on_full_resync_response)
+        dialog.present(self)
+
+    def _on_full_resync_response(self, dialog, response):
+        if response != "sync":
+            return
+        reset_sync_progress(self._db_path)
+        self._ensure_worker()
+        self._status_row.set_subtitle("Syncing all responses…")
 
     def _on_worker_status(self, status, message):
         GLib.idle_add(self._apply_worker_status, status, message)

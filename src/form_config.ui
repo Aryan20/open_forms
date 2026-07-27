@@ -5,147 +5,162 @@
     <property name="halign">center</property>
     <property name="valign">center</property>
     <child>
-      <object class="GtkLabel" id="config_label">
-        <property name="label" translatable="yes">Select Form Config</property>
-        <style>
-          <class name="title-4"/>
-        </style>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <property name="orientation">1</property>
-        <property name="spacing">5</property>
-        <property name="margin-top">10</property>
-          <child>
-            <object class="GtkButton" id="build_form_btn">
+      <object class="AdwClamp">
+        <property name="maximum-size">400</property>
+        <property name="margin-start">5</property>
+        <property name="margin-end">5</property>
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">1</property>
+            <child>
+              <object class="GtkLabel" id="config_label">
+                <property name="label" translatable="yes">Select Form Config</property>
+                <style>
+                  <class name="title-4"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">1</property>
+                <property name="spacing">5</property>
+                <property name="margin-top">10</property>
+                  <child>
+                    <object class="GtkButton" id="build_form_btn">
 
-              <property name="child">
-                <object class="AdwButtonContent">
-                  <property name="icon-name">document-edit-symbolic</property>
-                  <property name="label" translatable="yes">_Create New</property>
-                  <property name="use-underline">True</property>
-                </object>
-              </property>
-            </object>
-          </child>
-          <child>
-            <object class="GtkBox">
-              <property name="orientation">0</property>
-              <property name="spacing">8</property>
-              <property name="homogeneous">1</property>
-              <property name="margin-top">10</property>
-              <child>
-                <!-- Open JSON -->
-                <object class="GtkButton" id="open_form_config_btn">
-                  <property name="hexpand">1</property>
-                  <property name="child">
-                    <object class="AdwButtonContent">
-                      <property name="icon-name">document-open-symbolic</property>
-                      <property name="label" translatable="yes">_Open</property>
-                      <property name="use-underline">True</property>
+                      <property name="child">
+                        <object class="AdwButtonContent">
+                          <property name="icon-name">document-edit-symbolic</property>
+                          <property name="label" translatable="yes">_Create New</property>
+                          <property name="use-underline">True</property>
+                        </object>
+                      </property>
                     </object>
-                  </property>
-                </object>
-              </child>
-              <child>
-                <!-- Edit in Builder - sensitive only after a config is selected -->
-                <object class="GtkButton" id="edit_in_builder_btn">
-                  <property name="sensitive">0</property>
-                  <property name="hexpand">1</property>
-                  <property name="tooltip-text" translatable="yes">Edit this config in the visual builder</property>
-                  <property name="child">
-                    <object class="AdwButtonContent">
-                      <property name="icon-name">document-edit-symbolic</property>
-                      <property name="label" translatable="yes">_Edit</property>
-                      <property name="use-underline">True</property>
+                  </child>
+                  <child>
+                    <object class="GtkBox">
+                      <property name="orientation">0</property>
+                      <property name="spacing">8</property>
+                      <property name="homogeneous">1</property>
+                      <property name="margin-top">10</property>
+                      <child>
+                        <!-- Open JSON -->
+                        <object class="GtkButton" id="open_form_config_btn">
+                          <property name="hexpand">1</property>
+                          <property name="child">
+                            <object class="AdwButtonContent" id="open_form_config_content">
+                              <property name="icon-name">document-open-symbolic</property>
+                              <property name="label" translatable="yes">_Open</property>
+                              <property name="use-underline">True</property>
+                              <property name="can-shrink">1</property>
+                            </object>
+                          </property>
+                        </object>
+                      </child>
+                      <child>
+                        <!-- Edit in Builder - sensitive only after a config is selected -->
+                        <object class="GtkButton" id="edit_in_builder_btn">
+                          <property name="sensitive">0</property>
+                          <property name="hexpand">1</property>
+                          <property name="tooltip-text" translatable="yes">Edit this config in the visual builder</property>
+                          <property name="child">
+                            <object class="AdwButtonContent">
+                              <property name="icon-name">document-edit-symbolic</property>
+                              <property name="label" translatable="yes">_Edit</property>
+                              <property name="use-underline">True</property>
+                            </object>
+                          </property>
+                        </object>
+                      </child>
                     </object>
-                  </property>
-                </object>
-              </child>
-            </object>
-          </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkLabel" id="csv_label">
-        <property name="margin-top">20</property>
-        <property name="label" translatable="yes">Select Form CSV</property>
-        <style>
-          <class name="title-4"/>
-        </style>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <property name="orientation">1</property>
-        <property name="spacing">5</property>
-        <property name="margin-top">10</property>
-        <child>
-          <object class="GtkButton" id="new_csv_btn">
-            <property name="child">
-              <object class="AdwButtonContent">
-                <property name="icon-name">document-new-symbolic</property>
-                <property name="label" translatable="yes">_Create New</property>
-                <property name="use-underline">True</property>
+                  </child>
               </object>
-            </property>
+            </child>
+            <child>
+              <object class="GtkLabel" id="csv_label">
+                <property name="margin-top">20</property>
+                <property name="label" translatable="yes">Select Form CSV</property>
+                <style>
+                  <class name="title-4"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">1</property>
+                <property name="spacing">5</property>
+                <property name="margin-top">10</property>
+                <child>
+                  <object class="GtkButton" id="new_csv_btn">
+                    <property name="child">
+                      <object class="AdwButtonContent" id="new_csv_content">
+                        <property name="icon-name">document-new-symbolic</property>
+                        <property name="label" translatable="yes">_Create New</property>
+                        <property name="use-underline">True</property>
+                        <property name="can-shrink">1</property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="open_csv_btn">
+                    <property name="child">
+                      <object class="AdwButtonContent" id="open_csv_content">
+                        <property name="icon-name">document-open-symbolic</property>
+                        <property name="label" translatable="yes">_Open Existing</property>
+                        <property name="use-underline">True</property>
+                        <property name="can-shrink">1</property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">0</property>
+                <property name="spacing">8</property>
+                <property name="homogeneous">1</property>
+                <property name="margin-top">10</property>
+                <child>
+                  <object class="GtkButton" id="view_responses_btn">
+                    <property name="sensitive">0</property>
+                    <property name="hexpand">1</property>
+                    <property name="child">
+                      <object class="AdwButtonContent">
+                        <property name="icon-name">view-list-symbolic</property>
+                        <property name="label" translatable="yes">View Responses</property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="sync_btn">
+                    <property name="sensitive">0</property>
+                    <property name="hexpand">1</property>
+                    <property name="tooltip-text" translatable="yes">Push responses to Google Sheets or WebDAV</property>
+                    <property name="child">
+                      <object class="AdwButtonContent">
+                        <property name="icon-name">emblem-synchronizing-symbolic</property>
+                        <property name="label" translatable="yes">Sync</property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="create_form_btn">
+                <property name="margin-top">30</property>
+                <property name="label" translatable="yes">Open Form</property>
+                <property name="sensitive">0</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
+              </object>
+            </child>
           </object>
         </child>
-        <child>
-          <object class="GtkButton" id="open_csv_btn">
-            <property name="child">
-              <object class="AdwButtonContent">
-                <property name="icon-name">document-open-symbolic</property>
-                <property name="label" translatable="yes">_Open Existing</property>
-                <property name="use-underline">True</property>
-              </object>
-            </property>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkBox">
-        <property name="orientation">0</property>
-        <property name="spacing">8</property>
-        <property name="homogeneous">1</property>
-        <property name="margin-top">10</property>
-        <child>
-          <object class="GtkButton" id="view_responses_btn">
-            <property name="sensitive">0</property>
-            <property name="hexpand">1</property>
-            <property name="child">
-              <object class="AdwButtonContent">
-                <property name="icon-name">view-list-symbolic</property>
-                <property name="label" translatable="yes">View Responses</property>
-              </object>
-            </property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkButton" id="sync_btn">
-            <property name="sensitive">0</property>
-            <property name="hexpand">1</property>
-            <property name="tooltip-text" translatable="yes">Push responses to Google Sheets or WebDAV</property>
-            <property name="child">
-              <object class="AdwButtonContent">
-                <property name="icon-name">emblem-synchronizing-symbolic</property>
-                <property name="label" translatable="yes">Sync</property>
-              </object>
-            </property>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="GtkButton" id="create_form_btn">
-        <property name="margin-top">30</property>
-        <property name="label" translatable="yes">Open Form</property>
-        <property name="sensitive">0</property>
-        <style>
-          <class name="suggested-action"/>
-        </style>
       </object>
     </child>
   </template>

@@ -18,15 +18,15 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
 Google Sheets sync backend. Implements the OAuth2 PKCE + local-redirect flow
-and the append API described in SYNC_ARCHITECTURE.md §4. Uses only the
-standard library for HTTP (urllib, http.server, json) - no google-auth or
-gspread dependency - to keep the Flatpak bundle small.
+and the append API. Uses only the standard library for HTTP (urllib,
+http.server, json) - no google-auth or gspread dependency - to keep the
+Flatpak bundle small.
 
 The OAuth client id/secret are NOT bundled with the app (there is no server
 component to keep them in). The user brings their own OAuth client from the
 Google Cloud Console, entered once app-wide in sync_settings_dialog.py - not
-per form. The connected account and client credentials are stored in the
-GNOME Keyring under a fixed app-wide scope (see _APP_SCOPE below), so every
+per form. The connected account and client credentials are stored via
+sync/keyring.py under a fixed app-wide scope (see _APP_SCOPE below), so every
 form shares the same Google connection; each form only picks which sheet it
 pushes to (see sync_panel.py). This mirrors how other credential-less
 open-source desktop apps integrate with Google APIs.
@@ -203,8 +203,8 @@ class GoogleSheetsBackend(SyncBackend):
 
     def start_oauth_flow(self, on_complete) -> None:
         """
-        Run the PKCE + local-redirect OAuth flow (SYNC_ARCHITECTURE.md §4.1)
-        using the app-wide OAuth client saved via set_client_credentials().
+        Run the PKCE + local-redirect OAuth flow using the app-wide OAuth
+        client saved via set_client_credentials().
 
         Opens the system browser and, in a background thread, blocks until
         Google redirects back to a temporary localhost server. Calls
@@ -289,7 +289,10 @@ class GoogleSheetsBackend(SyncBackend):
             raise SyncError(f"Network unreachable: {e.reason}") from e
 
         token["obtained_at"] = time.time()
-        keyring.store_token(_APP_SCOPE, _TOKEN_KEY, token)
+        try:
+            keyring.store_token(_APP_SCOPE, _TOKEN_KEY, token)
+        except keyring.KeyringUnavailable as e:
+            raise SyncError(f"Could not save Google account credentials: {e}") from e
 
     def _fresh_token(self) -> str:
         token = keyring.load_token(_APP_SCOPE, _TOKEN_KEY)

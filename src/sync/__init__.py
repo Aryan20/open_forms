@@ -17,8 +17,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
-Sync layer described in SYNC_ARCHITECTURE.md.
-
 Pushes locally collected CSV responses to an external destination
 (Google Sheets, WebDAV/Nextcloud, ...) in the background. Sync itself is
 always opt-in per form: a form only pushes anywhere once its own sync.db
@@ -29,8 +27,11 @@ configured once, app-wide, in sync_settings_dialog.py.
 
 from typing import TYPE_CHECKING, Literal, overload
 
-from .backend import SyncBackend, SyncConfig, SyncError
-from .queue import db_path_for_csv, get_config, init_db
+from .backend import SyncBackend, SyncConfig
+from .backend import SyncError as SyncError
+from .queue import db_path_for_csv as db_path_for_csv
+from .queue import get_config
+from .queue import init_db as init_db
 
 if TYPE_CHECKING:
     from .google_sheets import GoogleSheetsBackend

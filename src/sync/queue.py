@@ -20,7 +20,7 @@
 SQLite-backed sync queue. The CSV itself is append-only and remains the
 source of truth; this file only tracks how far a backend has gotten
 (`last_synced_row`) plus a small history log for the settings panel's
-status line. See SYNC_ARCHITECTURE.md §3.1 for the schema this mirrors.
+status line.
 """
 
 import csv
@@ -99,6 +99,18 @@ def get_last_synced_row(db_path: str) -> int:
 
 def set_last_synced_row(db_path: str, row_index: int) -> None:
     set_config(db_path, "last_synced_row", str(row_index))
+
+
+def mark_all_synced(db_path: str, csv_path: str) -> None:
+    """Mark every existing row synced, so linking a new destination only
+    picks up rows added after this point, not the form's whole history."""
+    set_last_synced_row(db_path, count_csv_rows(csv_path) - 1)
+
+
+def reset_sync_progress(db_path: str) -> None:
+    """Rewind so the next push includes every row from the start - backs
+    the explicit 'sync all responses' action."""
+    set_last_synced_row(db_path, -1)
 
 
 def log_sync_ok(db_path: str, start_row: int, end_row: int) -> None:
@@ -199,6 +211,6 @@ def rows_to_csv_text(rows: list[list[str]]) -> str:
 
 
 def db_path_for_csv(csv_path: str) -> str:
-    """`<form_name>.csv` -> `<form_name>.sync.db`, per SYNC_ARCHITECTURE.md §3.1."""
+    """`<form_name>.csv` -> `<form_name>.sync.db`."""
     base, _ext = os.path.splitext(csv_path)
     return f"{base}.sync.db"
